@@ -1,13 +1,14 @@
-import { SiteHeader } from "@/components/site-header"
-
+import { BreadCrumb } from "@/components/breadcrumb";
 
 export default function Page() {
+
+  const crumbs = [
+    {label: "Home", link: '/'}
+  ];
+
   return (
-    <div>
-      <SiteHeader />
-      <div className="flex flex-col items-center justify-center min-h-screen w-full">
-        <p className="font-medium">Hello world!</p>
-      </div>
+    <div className="flex flex-col py-6">
+      <BreadCrumb crumbs={crumbs} currentPage="Dashboard" />
     </div>
   )
 }

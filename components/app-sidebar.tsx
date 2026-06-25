@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sidebar"
 import { CalendarCheckIcon, FileTextIcon, LayoutDashboardIcon, MapIcon, UsersIcon } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 const data = {
   user: {
@@ -77,6 +78,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <Link href="/">
+              <Image src="/cedro-cheetah.svg" width={20} height={20} alt="Cedro Adventures cheetah mascot" />
                 <span className="text-base font-semibold">Cedro Management</span>
               </Link>
             </SidebarMenuButton>

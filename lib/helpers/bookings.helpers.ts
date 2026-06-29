@@ -1,5 +1,4 @@
 export async function getBookings(options: {
-    accessToken?: string,
     page?: string,
     limit?: string,
     search?: string
@@ -9,7 +8,6 @@ export async function getBookings(options: {
         const {
             limit = "10",
             page = "1",
-            accessToken,
             search
         } = options;
 
@@ -22,9 +20,6 @@ export async function getBookings(options: {
 
         const res = await fetch(url, {
             method: 'GET',
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
         });
 
         if (!res.ok) {

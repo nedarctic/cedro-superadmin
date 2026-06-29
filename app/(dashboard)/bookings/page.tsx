@@ -32,8 +32,8 @@ export default async function BookingsPage(
         <div className="flex flex-col py-6 ml-4 mr-6 gap-6">
             <BreadCrumb currentPage="Bookings" />
             <SearchInput path="bookings" placeholder="Search bookings..." />
-            <TableData headers={headers} data={bookings} />
-            <PaginationComponent path="bookings" meta={meta} />
+            {bookings.length ? <TableData headers={headers} data={bookings} /> : <p className="text-sm font-medium">No bookings at the moment</p>}
+            {bookings.length ? <PaginationComponent path="bookings" meta={meta} /> : ''}
         </div>
     );
 }

@@ -173,7 +173,7 @@ export default function CreateTourForm() {
     const tourImage = formData.get('tourImage');
     const price = formData.get('price');
     const title = formData.get('title');
-    const itineraryActivities = formData.getAll('itineraryActivities')
+    
 
     console.log('itineraries', itineraries)
   }

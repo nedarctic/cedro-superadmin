@@ -20,7 +20,7 @@ function useDebounce<T>(value: T, delay = 400) {
     return debouncedValue;
 }
 
-export function SearchInput() {
+export function SearchInput({placeholder, path}: {placeholder: string, path: string}) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -31,8 +31,8 @@ export function SearchInput() {
     useEffect(() => {
         const params = new URLSearchParams(searchParams);
         debouncedSearch?.trim() ? params.set('search', debouncedSearch) : params.delete('search');
-        params.set('search', search);
-        router.replace(`/bookings?${params.toString()}`)
+        search && params.set('search', search);
+        router.replace(`/${path}?${params.toString()}`)
     }, [debouncedSearch, router]);
 
     return (
@@ -42,7 +42,7 @@ export function SearchInput() {
                 <InputGroupInput
                     value={search}
                     onChange={(e) => setSearch(e.currentTarget.value)}
-                    placeholder="Search bookings..." />
+                    placeholder={placeholder} />
                 <InputGroupAddon align="inline-start">
                     <SearchIcon className="text-muted-foreground" />
                 </InputGroupAddon>

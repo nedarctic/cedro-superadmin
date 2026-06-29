@@ -4,7 +4,16 @@ import { Booking } from "@/lib/types/booking";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { useSearchParams } from "next/navigation";
 
-export function TableData({ bookingData }: { bookingData: Booking }) {
+export function TableData({
+    headers,
+    data
+}: {
+    data: any,
+    headers: {
+        label: string,
+        key: string
+    }[]
+}) {
     const searchParams = useSearchParams();
 
     const page = parseInt(searchParams.get('page') || "1", 10);
@@ -15,19 +24,17 @@ export function TableData({ bookingData }: { bookingData: Booking }) {
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead>Index</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Tour</TableHead>
+                    <TableHead className="font-bold">ID</TableHead>
+                    {headers.map(({ label }, index) => <TableHead className={`font-bold ${index === headers.length - 1 ? 'text-right' : ''}`} key={index}>{label}</TableHead>)}
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {bookingData.map((booking, index) =>
-                    <TableRow key={booking.id}>
+                {data.map((item: any, index: number) =>
+                    <TableRow key={item.id}>
                         <TableCell>{skip + index + 1}</TableCell>
-                        <TableCell>{booking.name}</TableCell>
-                        <TableCell>{booking.email}</TableCell>
-                        <TableCell>{booking.tour.title}</TableCell>
+                        {headers.map(({ key }, index) => (
+                            <TableCell className={`${index === headers.length - 1 ? 'text-right' : ''}`} key={index}>{item[key]}</TableCell>
+                        ))}
                     </TableRow>)}
             </TableBody>
         </Table>

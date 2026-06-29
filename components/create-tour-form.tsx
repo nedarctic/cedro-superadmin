@@ -2,7 +2,7 @@
 
 import type { Dispatch, SetStateAction, SubmitEvent } from "react";
 import { useState } from "react";
-import { z } from "zod";
+import { string, z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "./ui/textarea";
@@ -31,7 +31,7 @@ export default function CreateTourForm() {
   const [included, setIncluded] = useState<string[]>(['']);
   const [excluded, setExcluded] = useState<string[]>(['']);
   const [title, setTitle] = useState<string>('');
-  const [destination, setDestination] = useState<string>('');
+  const [destinationName, setDestinationName] = useState<string>('');
   const [dates, setDates] = useState<string>('');
   const [groupSize, setGroupSize] = useState<string>('');
   const [price, setPrice] = useState<string>('');
@@ -136,46 +136,40 @@ export default function CreateTourForm() {
   async function submitForm(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    // console.log('Description:', description);
-    // console.log('Activities:')
-    // activities.map(activity => console.log(activity))
-    // console.log('Included:')
-    // included.map(activity => console.log(activity))
-    // console.log('Excluded:')
-    // excluded.map(activity => console.log(activity))
+    // 1. create destination POST api/destinations 
+    // {
+    // name: string
+    // }
 
-    // console.log('Title:', description);
-    // console.log('Destination:', destination);
-    // console.log('Duration:', duration);
-    // console.log('Dates:', dates);
-    // console.log('Group size:', groupSize);
-    // console.log('Price:', price);
-    // console.log('Tour image:', tourImage);
+    setLoading(true);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations`, {
+      method: 'POST',
+      body: JSON.stringify({ destinationName })
+    });
 
-    // console.log('Itineraries:')
-    // itineraries.map(({day, subtitle, activities, image}) => {
-    //   console.log('Day:', day);
-    //   console.log('Subtitle:', subtitle);
-    //   console.log('Image:', image);
+    const { data, success } = await res.json();
 
-    //   activities.map(activity => console.log('Itinerary activity', activity));
-    // })
+    // 2. create tour POST api/destinations/destinationId/tours {
+    // tourImage: File, 
+    // description: string, 
+    // duration: string, 
+    // title: string,
+    // dates: string,
+    // groupSize: string,
+    // price: string,
+    // activities: string[],
+    // excluded: string[],
+    // included: string[],
+    // }
 
-    const formData = new FormData(event.currentTarget);
-    const activities = formData.getAll('activities');
-    const excluded = formData.getAll('excluded');
-    const included = formData.getAll('included')
-    const description = formData.get('description');    
-    const destination = formData.get('destination');
-    const duration = formData.get('duration');
-    const dates = formData.get('dates');
-    const groupSize = formData.get('groupSize');
-    const tourImage = formData.get('tourImage');
-    const price = formData.get('price');
-    const title = formData.get('title');
-    
+    // 3. create itinerary POST api/destinations/destinationId/tours/itineraries
+    // {
+    // subtitle: string, 
+    // day: string, 
+    // activities: string[]
+    // }[]
 
-    console.log('itineraries', itineraries)
+    setLoading(false);
   }
 
   return (
@@ -265,7 +259,7 @@ export default function CreateTourForm() {
 
       <Field name="destination">
         <FieldLabel>Destination</FieldLabel>
-        <Input required value={destination} onChange={e => setDestination(e.currentTarget.value)} type="text" />
+        <Input required value={destinationName} onChange={e => setDestinationName(e.currentTarget.value)} type="text" />
       </Field>
 
       <Field name="duration">

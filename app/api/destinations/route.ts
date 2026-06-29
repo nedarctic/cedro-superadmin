@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
 
         const res = await fetch(`${process.env.NEST_API_URL}/destinations`, {
-            method: 'GET',
+            method: 'POST',
             headers: {
                 Authorization: `Bearer ${accessToken}`,
                 'Content-Type': 'application/json',

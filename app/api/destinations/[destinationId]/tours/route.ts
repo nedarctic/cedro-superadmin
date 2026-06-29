@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ destinationId: string }> }) {
     try {
         const session = await getServerSession(authOptions);
 
@@ -12,9 +12,10 @@ export async function POST(req: NextRequest) {
         }
 
         const { accessToken } = session;
+        const { destinationId } = await params;
 
         const formData = await req.formData();
-        const res = await fetch(`${process.env.NEST_API_URL}/tours`, {
+        const res = await fetch(`${process.env.NEST_API_URL}/tours/${destinationId}`, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${accessToken}`

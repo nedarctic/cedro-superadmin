@@ -17,17 +17,23 @@ export default async function BookingsPage(
     const { limit, page, search } = await searchParams;
     const { success, data, error } = await getBookings({ page, limit, search });
 
-    const {bookings, meta} = data;
+    const { bookings, meta } = data;
 
     error && console.log('An error occurred fetching bookings', error);
     success && console.log('Successfully fetched bookings', bookings);
 
+    const headers = [
+        { label: 'Name', key: 'name' },
+        { label: 'Email', key: 'email' },
+        { label: 'Tour', key: 'tourTitle' },
+    ];
+
     return (
         <div className="flex flex-col py-6 ml-4 mr-6 gap-6">
             <BreadCrumb currentPage="Bookings" />
-            <SearchInput />
-            <TableData bookingData={bookings} />
-            <PaginationComponent meta={meta} />
+            <SearchInput path="bookings" placeholder="Search bookings..." />
+            <TableData headers={headers} data={bookings} />
+            <PaginationComponent path="bookings" meta={meta} />
         </div>
     );
 }

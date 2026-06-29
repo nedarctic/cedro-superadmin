@@ -19,8 +19,10 @@ type PaginationMeta = {
 };
 
 export function PaginationComponent({
+  path,
   meta,
 }: {
+  path: string;
   meta: PaginationMeta;
 }) {
   const searchParams = useSearchParams();
@@ -30,7 +32,7 @@ export function PaginationComponent({
 
     params.set("page", page.toString());
 
-    return `/bookings?${params.toString()}`;
+    return `/${path}?${params.toString()}`;
   };
 
   const hasPrevious = meta.page > 1;

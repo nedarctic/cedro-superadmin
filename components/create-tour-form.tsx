@@ -1,30 +1,37 @@
 "use client";
 
-import type { Dispatch, SetStateAction, SubmitEvent } from "react";
-import { useState } from "react";
-import { string, z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Textarea } from "./ui/textarea";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import type { Dispatch, SetStateAction, SubmitEvent } from "react";
+import { useState } from "react";
+import { Textarea } from "./ui/textarea";
+import { toast } from 'sonner';
+import { Loader2, PlusIcon } from "lucide-react";
+import { Dialog, DialogContent } from "./ui/dialog";
+import { SpinnerCustom } from "./spinner-custom";
+import { useRouter } from "next/navigation";
 
 type Itinerary = {
   activities: string[];
   subtitle: string;
   day: string;
-  image: File | null;
+  itineraryImage: File | null;
 };
 
 const initialItineraryData = (day: number) => [{
   activities: [''],
   subtitle: '',
   day: `Day ${day}`,
-  image: null
+  itineraryImage: null
 }]
 
 export default function CreateTourForm() {
+  const router = useRouter();
+
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined)
 
   const [description, setDescription] = useState<string>('');
   const [activities, setActivities] = useState<string[]>(['']);
@@ -38,6 +45,16 @@ export default function CreateTourForm() {
   const [tourImage, setTourImage] = useState<File | null>(null);
   const [itineraries, setItineraries] = useState<Itinerary[]>(initialItineraryData(1));
   const [duration, setDuration] = useState<string>('');
+
+  const [steps, setSteps] = useState<{
+    destination: string;
+    tour: string;
+    itineraries: string;
+  }>({
+    destination: "Pending",
+    tour: "Pending",
+    itineraries: "Pending"
+  })
 
   const handleArrayChange = (
     setter: Dispatch<SetStateAction<string[]>>,
@@ -91,7 +108,7 @@ export default function CreateTourForm() {
   ) => {
     setItineraries(prev => {
       const copy = [...prev];
-      copy[itineraryId] = { ...copy[itineraryId], image: file };
+      copy[itineraryId] = { ...copy[itineraryId], itineraryImage: file };
       return copy;
     })
   }
@@ -136,45 +153,157 @@ export default function CreateTourForm() {
   async function submitForm(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    // 1. create destination POST api/destinations 
-    // {
-    // name: string
-    // }
+    try {
+      setLoading(true);
 
-    setLoading(true);
-    const res = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations`, {
-      method: 'POST',
-      body: JSON.stringify({ destinationName })
-    });
+      // create destination
 
-    const { data, success } = await res.json();
+      setSteps(prev => ({...prev, destination: "Creating destination"}));
 
-    // 2. create tour POST api/destinations/destinationId/tours {
-    // tourImage: File, 
-    // description: string, 
-    // duration: string, 
-    // title: string,
-    // dates: string,
-    // groupSize: string,
-    // price: string,
-    // activities: string[],
-    // excluded: string[],
-    // included: string[],
-    // }
+      const destinationResult = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations`, {
+        method: 'POST',
+        body: JSON.stringify({ destinationName })
+      });
 
-    // 3. create itinerary POST api/destinations/destinationId/tours/itineraries
-    // {
-    // subtitle: string, 
-    // day: string, 
-    // activities: string[]
-    // }[]
+      const {
+        data: destinationData,
+        success: destinationSuccess,
+        error: destinationError
+      } = await destinationResult.json();
 
-    setLoading(false);
+      if (!destinationSuccess) {
+        setLoading(false);
+        setError(destinationError);
+        toast.error('Error occurred creating destination');
+        console.log('Error creating destination:', destinationError);
+        return;
+      } else {
+        setSteps(prev => ({...prev, destination: "Destination created successfully ✅"}))
+        toast.success('Successfully created destination');
+      }
+
+      // create tour using destination id
+      setSteps(prev => ({...prev, tour: "Creating tour"}))
+      const { id: destinationId } = destinationData;
+
+      if (!destinationId) {
+        setError('Did not get destination ID');
+        toast.error('Missing destination ID', { description: "Did not get ID from the created destination" });
+        return;
+      } else {
+        console.log('Successfully retrieved destinationId', destinationId);
+        toast.success('Successfully retrieved destinationID', { description: destinationId });
+      }
+
+      const tourFormData = new FormData();
+      tourImage && tourFormData.append('tourImage', tourImage);
+      tourFormData.append(
+        'tour',
+        JSON.stringify({
+          description,
+          duration,
+          title,
+          dates,
+          groupSize,
+          price,
+          activities,
+          excluded,
+          included
+        })
+      )
+
+      const url = new URL(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations/${destinationId}/tours`);
+      const tourResult = await fetch(url, {
+        method: 'POST',
+        body: tourFormData
+      })
+
+      const {
+        data: tourData,
+        success: tourSuccess,
+        error: tourError
+      } = await tourResult.json();
+
+      if (!tourSuccess) {
+        setLoading(false);
+        setError(tourError);
+        toast.error('Error occurred creating tour.', { description: tourError })
+        console.log('Error creating tour', tourError);
+        return;
+      } else {
+        setSteps(prev => ({...prev, tour: "Tour created successfully ✅"}))
+        toast.success('Successfully created tour.')
+      }
+
+      // create itineraries
+      setSteps(prev => ({...prev, itineraries: "Creating itineraries"}))
+      const { id: tourId } = tourData;
+
+      const itinerariesFormData = new FormData();
+
+      for (const itinerary of itineraries) {
+        if (itinerary.itineraryImage) {
+          itinerariesFormData.append(
+            "itineraryImages",
+            itinerary.itineraryImage
+          );
+        }
+      }
+
+      itinerariesFormData.append(
+        "itineraries",
+        JSON.stringify(
+          itineraries.map(
+            ({ subtitle, day, activities }) => ({
+              subtitle,
+              day,
+              activities,
+            })
+          )
+        )
+      );
+
+      const itineraryRes = await fetch(
+        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations/${destinationId}/tours/${tourId}/itineraries`,
+        {
+          method: "POST",
+          body: itinerariesFormData,
+        }
+      );
+
+      const { success: itinerarySuccess, error: itineraryError } = await itineraryRes.json();
+
+      if (!itinerarySuccess) {
+        setError(itineraryError);
+        toast.error('Error occurred creating itinerary');
+        return;
+      } else {
+        setSteps(prev => ({...prev, itineraries: 'Itineraries created successfully ✅'}))
+        setLoading(false);
+        toast.success("Itineraries successfully created", {
+          description: "New tour with destination and itineraries successfully created."
+        })
+      }
+
+      router.push('/tours');
+
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred"
+      );
+      toast.error("Failed to create tour", {
+        description: "Service temporarily unavailable."
+      })
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <Form
-      className="flex w-full max-w-prose flex-col gap-4"
+      className="flex w-full max-w-7xl mx-auto flex-col gap-4"
       onSubmit={submitForm}
     >
       <Field>
@@ -182,12 +311,13 @@ export default function CreateTourForm() {
         <Textarea name="description" required value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description" />
       </Field>
 
-      <Field name="activities" className="w-full">
+      <Field className="w-full">
         <FieldLabel>Activities</FieldLabel>
 
         {activities.map((value, index) => (
           <div key={index} className="flex gap-2 w-full">
             <Input
+              name="activities"
               value={value}
               onChange={(e) =>
                 handleArrayChange(setActivities, index, e.target.value)
@@ -198,7 +328,7 @@ export default function CreateTourForm() {
 
             <Button
               type="button"
-              variant="destructive-outline"
+              variant="destructive"
               onClick={() => removeField(setActivities, index)}
             >
               Remove activity
@@ -206,85 +336,104 @@ export default function CreateTourForm() {
           </div>
         ))}
 
-        <Button type="button" onClick={() => addField(setActivities)}>
-          Add Activity
-        </Button>
+        <div className="w-fit">
+          <Button
+            type="button"
+            onClick={() => addField(setActivities)}
+          >
+            <PlusIcon size={18} />
+            Add Activity
+          </Button>
+        </div>
       </Field>
 
-      <Field className="w-full" name="included">
+      <Field className="w-full" >
         <FieldLabel>What's included</FieldLabel>
         {included.map((value, index) => (
           <div key={index} className="flex gap-2 w-full">
             <Input
+              name="included"
               required
               type="text"
               placeholder="Included"
               value={value}
               onChange={(e) => handleArrayChange(setIncluded, index, e.currentTarget.value)}
             />
-            <Button onClick={() => removeField(setIncluded, index)} variant="destructive-outline">Remove item</Button>
+            <Button onClick={() => removeField(setIncluded, index)}
+              type="button" variant="destructive">Remove item</Button>
           </div>
         ))}
 
-        <Button onClick={() => addField(setIncluded)}>Add included item</Button>
-
+        <div className="w-fit">
+          <Button type="button"
+            onClick={() => addField(setIncluded)}><PlusIcon size={18} />Add included item</Button>
+        </div>
       </Field>
 
-      <Field name="excluded" className="w-full">
+      <Field className="w-full">
         <FieldLabel>What's excluded</FieldLabel>
         {excluded.map((value, index) =>
           <div key={index} className="flex gap-3 items-center w-full">
             <Input
               required
+              name="excluded"
               placeholder="Excluded"
               value={value}
               onChange={(e) => handleArrayChange(setExcluded, index, e.currentTarget.value)}
               type="text"
             />
-            <Button variant="destructive-outline">Remove item</Button>
+            <Button type="button" variant="destructive"
+              onClick={() => removeField(setExcluded, index)}>Remove item</Button>
           </div>
         )}
-        <Button onClick={() => addField(setExcluded)}>Add excluded item</Button>
-
+        <div className="w-fit">
+          <Button type="button"
+            onClick={() => addField(setExcluded)}><PlusIcon size={18} />Add excluded item</Button>
+        </div>
       </Field>
 
       {/* general info */}
 
       <h2 className="font-semibold text-lg py-2">General information</h2>
 
-      <Field name="title">
+      <Field >
         <FieldLabel>Title</FieldLabel>
-        <Input required value={title} onChange={e => setTitle(e.currentTarget.value)} type="text" />
+        <Input name="title" required value={title} onChange={e => setTitle(e.currentTarget.value)} type="text" />
       </Field>
 
-      <Field name="destination">
+      <Field >
         <FieldLabel>Destination</FieldLabel>
-        <Input required value={destinationName} onChange={e => setDestinationName(e.currentTarget.value)} type="text" />
+        <Input name="destination" required value={destinationName}
+          onChange={e => setDestinationName(e.currentTarget.value)} type="text" />
       </Field>
 
-      <Field name="duration">
+      <Field >
         <FieldLabel>Duration</FieldLabel>
-        <Input required value={duration} onChange={e => setDuration(e.currentTarget.value)} type="text" />
+        <Input name="duration" required value={duration}
+          onChange={e => setDuration(e.currentTarget.value)} type="text" />
       </Field>
 
-      <Field name="dates">
+      <Field >
         <FieldLabel>Dates</FieldLabel>
-        <Input required value={dates} onChange={e => setDates(e.currentTarget.value)} type="text" />
+        <Input name="dates" required value={dates}
+          onChange={e => setDates(e.currentTarget.value)} type="text" />
       </Field>
 
-      <Field name="groupSize">
+      <Field >
         <FieldLabel>Group size</FieldLabel>
-        <Input required value={groupSize} onChange={e => setGroupSize(e.currentTarget.value)} type="text" />
+        <Input name="groupSize" required value={groupSize}
+          onChange={e => setGroupSize(e.currentTarget.value)} type="text" />
       </Field>
 
-      <Field name="price">
+      <Field >
         <FieldLabel>Price</FieldLabel>
-        <Input required value={price} onChange={e => setPrice(e.currentTarget.value)} type="text" />
+        <Input name="price" required value={price}
+          onChange={e => setPrice(e.currentTarget.value)} type="text" />
       </Field>
 
-      <Field name="tourImage">
+      <Field >
         <FieldLabel>Add image</FieldLabel>
-        <Input required onChange={(e) => {
+        <Input name="tourImage" required onChange={(e) => {
           const file = e.currentTarget.files?.[0];
           file && setTourImage(file)
         }} type="file" accept="image/*" />
@@ -292,37 +441,44 @@ export default function CreateTourForm() {
 
       {/* itinerary */}
       <h2 className="font-semibold text-lg py-2">Itinerary</h2>
-      {itineraries.map(({ activities, subtitle, image }, itineraryIndex) => (
+      {itineraries.map(({ activities, subtitle, itineraryImage }, itineraryIndex) => (
         <div key={itineraryIndex} className="flex flex-col gap-2">
 
           <div className="flex justify-between">
-            <p className="font-medium text-md">Day {itineraryIndex + 1}</p>
-            <Button variant="outline" onClick={() => removeItinerary(itineraryIndex)}>Remove itinerary</Button>
+            <p className="font-medium text-md bg-green-600 px-2 rounded-md items-center flex text-black">Day {itineraryIndex + 1}</p>
+            <Button type="button" variant="destructive" onClick={() => removeItinerary(itineraryIndex)}>Remove itinerary</Button>
           </div>
 
-          <Field name="subtitle">
+          <Field >
             <FieldLabel>Subtitle</FieldLabel>
-            <Input required onChange={(e) => { handleItinerarySubtitle(itineraryIndex, e.currentTarget.value) }} value={subtitle} type="text" />
+            <Input name="subtitle" required
+              onChange={(e) => { handleItinerarySubtitle(itineraryIndex, e.currentTarget.value) }}
+              value={subtitle} type="text" />
           </Field>
 
-          <Field name="itineraryActivities" className="w-full">
+          <Field className="w-full">
+            <FieldLabel>Activities</FieldLabel>
             <div key={itineraryIndex} className="w-full flex flex-col gap-2">
               {activities.map((activity, activityIndex) => (
-                <div key={activityIndex} className="w-full flex flex-col gap-2">
-                  <FieldLabel>Activities</FieldLabel>
+                <div key={activityIndex} className="w-full flex flex-col gap-2 justify-end">
+
                   <div className="flex gap-3 w-full">
                     <Input
+                      name="itineraryActivities"
                       required
                       type="text"
                       value={activity}
                       onChange={(e) => handleItineraryActivity(itineraryIndex, activityIndex, e.target.value)}
                     />
-                    <Button onClick={() => removeItineraryActivityField(itineraryIndex, activityIndex)} variant="destructive-outline">Remove activity</Button>
+                    <Button type="button"
+                      onClick={() => removeItineraryActivityField(itineraryIndex, activityIndex)}
+                      variant="destructive">Remove activity</Button>
                   </div>
 
                 </div>
               ))}
-              <Button onClick={() => addItineraryActivityField(itineraryIndex)} variant="default" className="w-fit">Add activity</Button>
+              <Button type="button" onClick={() => addItineraryActivityField(itineraryIndex)}
+                variant="default" className="w-fit">Add activity<PlusIcon size={18} /></Button>
             </div>
           </Field>
 
@@ -342,11 +498,25 @@ export default function CreateTourForm() {
 
         </div>
       ))}
-      <Button variant="secondary" onClick={() => addItinerary(itineraries.length + 1)}>Add itinerary</Button>
+      <Button type="button" variant="secondary" onClick={() => addItinerary(itineraries.length + 1)}>Add itinerary</Button>
 
-      <Button loading={loading} type="submit">
+      <Button disabled={loading} type="submit">
         Submit
       </Button>
+      {loading && (
+        <Dialog open={loading}>
+          <DialogContent
+            className="sm:max-w-sm"
+            onInteractOutside={(e) => e.preventDefault()}
+            showCloseButton={false}
+            onEscapeKeyDown={(e) => e.preventDefault()}
+          >
+            <div className="flex flex-col items-center gap-4 py-6">
+              <SpinnerCustom progress={steps} />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </Form>
   );
 }

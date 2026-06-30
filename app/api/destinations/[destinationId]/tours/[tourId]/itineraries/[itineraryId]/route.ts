@@ -1,13 +1,12 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ itineraryId: string }> }) {
     try {
         const session = await getServerSession(authOptions);
         if (!session) {
-            redirect('/login')
+            return NextResponse.redirect(new URL('/login', req.url));
         }
         const { accessToken } = session;
         const { itineraryId } = await params;
@@ -25,7 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ it
             const errorMessage = await res.json()
             return NextResponse.json({
                 success: false,
-                error: errorMessage.message || 'Backend request error'
+                error: errorMessage.error.message || 'Backend request error'
             }, { status: res.status })
         }
 
@@ -44,7 +43,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     try {
         const session = await getServerSession(authOptions);
         if (!session) {
-            redirect('/login')
+            return NextResponse.redirect(new URL('/login', req.url));
         }
         const { accessToken } = session;
         const { itineraryId } = await params;
@@ -60,7 +59,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
             const errorMessage = await res.json()
             return NextResponse.json({
                 success: false,
-                error: errorMessage.message || 'Backend request error'
+                error: errorMessage.error.message || 'Backend request error'
             }, { status: res.status })
         }
 

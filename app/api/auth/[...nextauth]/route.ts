@@ -14,7 +14,7 @@ async function refreshToken(refreshAccessToken: string, oldToken: any) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ refreshAccessToken })
+        body: JSON.stringify({ refreshToken: refreshAccessToken })
     });
 
     if (!res.ok) {
@@ -22,6 +22,7 @@ async function refreshToken(refreshAccessToken: string, oldToken: any) {
     }
 
     const { data, success } = await res.json();
+
     if (!success) {
         return null;
     }
@@ -68,6 +69,7 @@ export const authOptions: AuthOptions = {
                 const { user, accessToken, refreshToken } = data;
 
                 const expiresAt = decodeExp(accessToken);
+
                 if (isNaN(expiresAt)) throw new Error('Invalid expiration on token');
 
                 return {
@@ -98,7 +100,7 @@ export const authOptions: AuthOptions = {
 
             if (token.expiresAt > Date.now()) return token;
 
-            return await refreshToken(token.refreshToken, token)
+            return await refreshToken(token.refreshToken, token);
         },
         async session({ token, session }) {
             session.user.id = token.id;

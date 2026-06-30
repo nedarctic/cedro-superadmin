@@ -1,14 +1,13 @@
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "../../auth/[...nextauth]/route";
-import { redirect } from "next/navigation";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ destinationId: string }> }) {
 
     try {
         const session = await getServerSession(authOptions);
         if (!session) {
-            redirect('/login')
+            return NextResponse.redirect(new URL('/login', req.url));
         }
         const { accessToken } = session;
         const { destinationId } = await params;
@@ -28,7 +27,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ de
             const errorMessage = await res.json();
             return NextResponse.json({
                 success: false,
-                error: errorMessage.message,
+                error: errorMessage.error.message,
             }, { status: res.status });
         };
 
@@ -50,7 +49,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ d
     try {
         const session = await getServerSession(authOptions);
         if (!session) {
-            redirect('/login');
+            return NextResponse.redirect(new URL('/login', req.url));
         }
         const { accessToken } = session;
         const { destinationId } = await params;

@@ -1,16 +1,17 @@
-import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
 import { authOptions } from "../auth/[...nextauth]/route";
-import { redirect } from "next/navigation";
 
 export async function POST(req: NextRequest) {
     try {
         const session = await getServerSession(authOptions);
+
         if (!session) {
-            redirect('/login');
+            return NextResponse.redirect(new URL('/login', req.url));
         }
 
         const { accessToken } = session;
+        console.log('token at destinations api route handler', accessToken)
 
         const body = await req.json();
 
@@ -27,7 +28,7 @@ export async function POST(req: NextRequest) {
             const errorMessage = await res.json();
             return NextResponse.json({
                 success: false,
-                error: errorMessage.message,
+                error: errorMessage.error.message,
             })
         }
 

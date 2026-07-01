@@ -10,7 +10,7 @@ import type { Dispatch, SetStateAction, SubmitEvent } from "react";
 import { useState } from "react";
 import { toast } from 'sonner';
 import z from "zod";
-import { Spinner, TourSpinnerCustom } from "./tour-spinner-custom";
+import { CustomSpinner } from "./custom-spinner";
 import { Dialog, DialogContent } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
 
@@ -593,7 +593,7 @@ export default function CreateTourForm() {
             onEscapeKeyDown={(e) => e.preventDefault()}
           >
             <div className="flex flex-col items-center gap-4 py-6">
-              <p className="font-bold text-md">Creating Tour</p><Spinner />
+              <p className="font-bold text-md">Creating Tour</p><CustomSpinner />
             </div>
           </DialogContent>
         </Dialog>

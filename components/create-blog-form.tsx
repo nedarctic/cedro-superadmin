@@ -9,7 +9,7 @@ import z from "zod";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogHeader, DialogDescription, DialogContent } from "./ui/dialog";
 import { cn } from "@/lib/utils";
-import { Spinner } from "./tour-spinner-custom";
+import { CustomSpinner } from "./custom-spinner";
 import { toast } from "sonner";
 
 type StorySection = {
@@ -217,7 +217,7 @@ export function CreateBlogForm() {
                         onEscapeKeyDown={(e) => e.preventDefault()}
                     >
                         <div className="flex flex-col items-center gap-4 py-6">
-                            <p className="font-bold text-md">Creating Blog</p><Spinner />
+                            <p className="font-bold text-md">Creating Blog</p><CustomSpinner />
                         </div>
                     </DialogContent>
                 </Dialog>

@@ -9,10 +9,10 @@ import { useRouter } from "next/navigation";
 import type { Dispatch, SetStateAction, SubmitEvent } from "react";
 import { useState } from "react";
 import { toast } from 'sonner';
-import { SpinnerCustom } from "./spinner-custom";
+import z from "zod";
+import { Spinner, TourSpinnerCustom } from "./tour-spinner-custom";
 import { Dialog, DialogContent } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
-import z from "zod";
 
 type Itinerary = {
   activities: string[];
@@ -371,24 +371,24 @@ export default function CreateTourForm() {
         {activities.map((value, index) => (
           <div key={index} className="flex-col space-y-2 w-full">
             <div className="flex gap-2 w-full">
-            <Input
-              name="activities"
-              value={value}
-              onChange={(e) =>
-                handleArrayChange(setActivities, index, e.target.value)
-              }
-              placeholder="Activity"
-              required
-            />
+              <Input
+                name="activities"
+                value={value}
+                onChange={(e) =>
+                  handleArrayChange(setActivities, index, e.target.value)
+                }
+                placeholder="Activity"
+                required
+              />
 
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={activities.length === 1}
-              onClick={() => removeField(setActivities, index)}
-            >
-              Remove activity
-            </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={activities.length === 1}
+                onClick={() => removeField(setActivities, index)}
+              >
+                Remove activity
+              </Button>
             </div>
             {errors.properties?.activities?.items?.[index]?.errors?.length && <ul className="list-disc pl-4">{errors.properties.activities.items[index].errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
           </div>
@@ -410,18 +410,18 @@ export default function CreateTourForm() {
         {included.map((value, index) => (
           <div key={index} className="flex-col space-y-2 w-full">
             <div className="flex gap-2 w-full">
-            <Input
-              name="included"
-              required
-              type="text"
-              placeholder="Included"
-              value={value}
-              onChange={(e) => handleArrayChange(setIncluded, index, e.currentTarget.value)}
-            />
-            <Button onClick={() => removeField(setIncluded, index)}
-              disabled={included.length === 1}
-              type="button" variant="destructive">Remove item</Button>
-              </div>
+              <Input
+                name="included"
+                required
+                type="text"
+                placeholder="Included"
+                value={value}
+                onChange={(e) => handleArrayChange(setIncluded, index, e.currentTarget.value)}
+              />
+              <Button onClick={() => removeField(setIncluded, index)}
+                disabled={included.length === 1}
+                type="button" variant="destructive">Remove item</Button>
+            </div>
             {errors.properties?.included?.items?.[index]?.errors?.length && <ul className="list-disc pl-4">{errors.properties.included.items[index].errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
           </div>
         ))}
@@ -437,17 +437,17 @@ export default function CreateTourForm() {
         {excluded.map((value, index) =>
           <div key={index} className="flex-col space-y-2 w-full">
             <div className="flex gap-2 w-full">
-            <Input
-              required
-              name="excluded"
-              placeholder="Excluded"
-              value={value}
-              onChange={(e) => handleArrayChange(setExcluded, index, e.currentTarget.value)}
-              type="text"
-            />
-            <Button type="button" variant="destructive" disabled={excluded.length === 1}
-              onClick={() => removeField(setExcluded, index)}>Remove item</Button>
-              </div>
+              <Input
+                required
+                name="excluded"
+                placeholder="Excluded"
+                value={value}
+                onChange={(e) => handleArrayChange(setExcluded, index, e.currentTarget.value)}
+                type="text"
+              />
+              <Button type="button" variant="destructive" disabled={excluded.length === 1}
+                onClick={() => removeField(setExcluded, index)}>Remove item</Button>
+            </div>
             {errors.properties?.excluded?.items?.[index]?.errors?.length && <ul className="list-disc pl-4">{errors.properties.excluded.items[index].errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
           </div>
         )}
@@ -574,7 +574,7 @@ export default function CreateTourForm() {
                   file)
               }}
               type="file" accept="image/*" />
-              {errors.properties?.itineraries?.items?.[itineraryIndex]?.properties?.itineraryImage?.errors?.length && <ul className="list-disc pl-4">{errors.properties.itineraries.items[itineraryIndex].properties.itineraryImage.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
+            {errors.properties?.itineraries?.items?.[itineraryIndex]?.properties?.itineraryImage?.errors?.length && <ul className="list-disc pl-4">{errors.properties.itineraries.items[itineraryIndex].properties.itineraryImage.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
           </Field>
 
         </div>
@@ -593,7 +593,7 @@ export default function CreateTourForm() {
             onEscapeKeyDown={(e) => e.preventDefault()}
           >
             <div className="flex flex-col items-center gap-4 py-6">
-              <SpinnerCustom progress={steps} />
+              <p className="font-bold text-md">Creating Tour</p><Spinner />
             </div>
           </DialogContent>
         </Dialog>

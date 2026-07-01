@@ -4,14 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PlusIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { Dispatch, SetStateAction, SubmitEvent } from "react";
 import { useState } from "react";
-import { Textarea } from "./ui/textarea";
 import { toast } from 'sonner';
-import { Loader2, PlusIcon } from "lucide-react";
-import { Dialog, DialogContent } from "./ui/dialog";
 import { SpinnerCustom } from "./spinner-custom";
-import { useRouter } from "next/navigation";
+import { Dialog, DialogContent } from "./ui/dialog";
+import { Textarea } from "./ui/textarea";
+import z from "zod";
 
 type Itinerary = {
   activities: string[];
@@ -27,11 +28,38 @@ const initialItineraryData = (day: number) => [{
   itineraryImage: null
 }]
 
+const itinerarySchema = z.object({
+  activities: z.array(z.string().trim().min(1, "Activity cannot be empty")).min(1, "At least one activity is required"),
+  subtitle: z.string().trim().min(1, "Subtitle cannot be empty"),
+  day: z.string().trim().min(1, "Day cannot be empty"),
+  itineraryImage: z.instanceof(File, { message: "Please upload an image file" })
+    .refine(file => file.size <= 5 * 1024 * 1024, { message: "Image size must be less than 5MB" })
+    .refine(file => ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG, PNG, and GIF images are allowed" })
+});
+
+const tourCreationSchema = z.object({
+  description: z.string().trim().min(1, "Description cannot be empty"),
+  activities: z.array(z.string().trim().min(1, "Activity cannot be empty")).min(1, "At least one activity is required"),
+  included: z.array(z.string().trim().min(1, "Included item cannot be empty")).min(1, "At least one included item is required"),
+  excluded: z.array(z.string().trim().min(1, "Excluded item cannot be empty")).min(1, "At least one excluded item is required"),
+  title: z.string().trim().min(1, "Title cannot be empty"),
+  destinationName: z.string().trim().min(1, "Destination name cannot be empty"),
+  dates: z.string().trim().min(1, "Dates cannot be empty"),
+  groupSize: z.string().trim().transform((val) => Number(val)).pipe(z.number().min(1, "Group size must be at least 1").max(100, "Group size cannot exceed 100")).transform((val) => val.toString()),
+  price: z.string().trim().transform((val) => Number(val)).pipe(z.number().min(1, "Price must be at least 1")).transform((val) => val.toString()),
+  tourImage: z.instanceof(File, { message: "Please upload an image file" })
+    .refine(file => file.size <= 5 * 1024 * 1024, { message: "Image size must be less than 5MB" })
+    .refine(file => ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG, PNG, and GIF images are allowed" }),
+  itineraries: z.array(itinerarySchema).min(1, "At least one itinerary is required"),
+  duration: z.string().trim().min(1, "Duration cannot be empty")
+});
+
 export default function CreateTourForm() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined)
+  const [errors, setErrors] = useState<any>({});
 
   const [description, setDescription] = useState<string>('');
   const [activities, setActivities] = useState<string[]>(['']);
@@ -156,9 +184,34 @@ export default function CreateTourForm() {
     try {
       setLoading(true);
 
+      // validation
+      const validationResult = tourCreationSchema.safeParse({
+        description,
+        activities,
+        included,
+        excluded,
+        title,
+        destinationName,
+        dates,
+        groupSize,
+        price,
+        tourImage,
+        itineraries,
+        duration
+      });
+
+      if (!validationResult.success) {
+        setErrors(z.treeifyError(validationResult.error));
+        console.log("Validation errors:", z.treeifyError(validationResult.error));
+        setLoading(false);
+        return;
+      } else {
+        setErrors({});
+      }
+
       // create destination
 
-      setSteps(prev => ({...prev, destination: "Creating destination"}));
+      setSteps(prev => ({ ...prev, destination: "Creating destination" }));
 
       const destinationResult = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations`, {
         method: 'POST',
@@ -178,12 +231,12 @@ export default function CreateTourForm() {
         console.log('Error creating destination:', destinationError);
         return;
       } else {
-        setSteps(prev => ({...prev, destination: "Destination created successfully ✅"}))
+        setSteps(prev => ({ ...prev, destination: "Destination created successfully ✅" }))
         toast.success('Successfully created destination');
       }
 
       // create tour using destination id
-      setSteps(prev => ({...prev, tour: "Creating tour"}))
+      setSteps(prev => ({ ...prev, tour: "Creating tour" }))
       const { id: destinationId } = destinationData;
 
       if (!destinationId) {
@@ -231,12 +284,12 @@ export default function CreateTourForm() {
         console.log('Error creating tour', tourError);
         return;
       } else {
-        setSteps(prev => ({...prev, tour: "Tour created successfully ✅"}))
+        setSteps(prev => ({ ...prev, tour: "Tour created successfully ✅" }))
         toast.success('Successfully created tour.')
       }
 
       // create itineraries
-      setSteps(prev => ({...prev, itineraries: "Creating itineraries"}))
+      setSteps(prev => ({ ...prev, itineraries: "Creating itineraries" }))
       const { id: tourId } = tourData;
 
       const itinerariesFormData = new FormData();
@@ -278,7 +331,7 @@ export default function CreateTourForm() {
         toast.error('Error occurred creating itinerary');
         return;
       } else {
-        setSteps(prev => ({...prev, itineraries: 'Itineraries created successfully ✅'}))
+        setSteps(prev => ({ ...prev, itineraries: 'Itineraries created successfully ✅' }))
         setLoading(false);
         toast.success("Itineraries successfully created", {
           description: "New tour with destination and itineraries successfully created."
@@ -309,13 +362,15 @@ export default function CreateTourForm() {
       <Field>
         <FieldLabel>Description</FieldLabel>
         <Textarea name="description" required value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description" />
+        {errors.properties?.description?.errors?.length && <ul className="list-disc pl-4">{errors.properties.description.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
       </Field>
 
       <Field className="w-full">
         <FieldLabel>Activities</FieldLabel>
 
         {activities.map((value, index) => (
-          <div key={index} className="flex gap-2 w-full">
+          <div key={index} className="flex-col space-y-2 w-full">
+            <div className="flex gap-2 w-full">
             <Input
               name="activities"
               value={value}
@@ -329,10 +384,13 @@ export default function CreateTourForm() {
             <Button
               type="button"
               variant="destructive"
+              disabled={activities.length === 1}
               onClick={() => removeField(setActivities, index)}
             >
               Remove activity
             </Button>
+            </div>
+            {errors.properties?.activities?.items?.[index]?.errors?.length && <ul className="list-disc pl-4">{errors.properties.activities.items[index].errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
           </div>
         ))}
 
@@ -350,7 +408,8 @@ export default function CreateTourForm() {
       <Field className="w-full" >
         <FieldLabel>What's included</FieldLabel>
         {included.map((value, index) => (
-          <div key={index} className="flex gap-2 w-full">
+          <div key={index} className="flex-col space-y-2 w-full">
+            <div className="flex gap-2 w-full">
             <Input
               name="included"
               required
@@ -360,7 +419,10 @@ export default function CreateTourForm() {
               onChange={(e) => handleArrayChange(setIncluded, index, e.currentTarget.value)}
             />
             <Button onClick={() => removeField(setIncluded, index)}
+              disabled={included.length === 1}
               type="button" variant="destructive">Remove item</Button>
+              </div>
+            {errors.properties?.included?.items?.[index]?.errors?.length && <ul className="list-disc pl-4">{errors.properties.included.items[index].errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
           </div>
         ))}
 
@@ -373,7 +435,8 @@ export default function CreateTourForm() {
       <Field className="w-full">
         <FieldLabel>What's excluded</FieldLabel>
         {excluded.map((value, index) =>
-          <div key={index} className="flex gap-3 items-center w-full">
+          <div key={index} className="flex-col space-y-2 w-full">
+            <div className="flex gap-2 w-full">
             <Input
               required
               name="excluded"
@@ -382,8 +445,10 @@ export default function CreateTourForm() {
               onChange={(e) => handleArrayChange(setExcluded, index, e.currentTarget.value)}
               type="text"
             />
-            <Button type="button" variant="destructive"
+            <Button type="button" variant="destructive" disabled={excluded.length === 1}
               onClick={() => removeField(setExcluded, index)}>Remove item</Button>
+              </div>
+            {errors.properties?.excluded?.items?.[index]?.errors?.length && <ul className="list-disc pl-4">{errors.properties.excluded.items[index].errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
           </div>
         )}
         <div className="w-fit">
@@ -398,62 +463,74 @@ export default function CreateTourForm() {
 
       <Field >
         <FieldLabel>Title</FieldLabel>
-        <Input name="title" required value={title} onChange={e => setTitle(e.currentTarget.value)} type="text" />
+        <Input name="title" placeholder="Title" required value={title} onChange={e => setTitle(e.currentTarget.value)} type="text" />
+        {errors.properties?.title?.errors?.length && <ul className="list-disc pl-4">{errors.properties.title.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
       </Field>
 
       <Field >
         <FieldLabel>Destination</FieldLabel>
-        <Input name="destination" required value={destinationName}
+        <Input name="destination" placeholder="Destination" required value={destinationName}
           onChange={e => setDestinationName(e.currentTarget.value)} type="text" />
+        {errors.properties?.destination?.errors?.length && <ul className="list-disc pl-4">{errors.properties.destination.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
       </Field>
 
       <Field >
         <FieldLabel>Duration</FieldLabel>
-        <Input name="duration" required value={duration}
+        <Input name="duration" placeholder="Duration" required value={duration}
           onChange={e => setDuration(e.currentTarget.value)} type="text" />
+        {errors.properties?.duration?.errors?.length && <ul className="list-disc pl-4">{errors.properties.duration.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
       </Field>
 
       <Field >
         <FieldLabel>Dates</FieldLabel>
-        <Input name="dates" required value={dates}
+        <Input name="dates" placeholder="Dates e.g., July, Anytime" required value={dates}
           onChange={e => setDates(e.currentTarget.value)} type="text" />
+        {errors.properties?.dates?.errors?.length && <ul className="list-disc pl-4">{errors.properties.dates.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
       </Field>
 
-      <Field >
+      <Field>
         <FieldLabel>Group size</FieldLabel>
-        <Input name="groupSize" required value={groupSize}
+        <Input name="groupSize" placeholder="Group size" required value={groupSize}
           onChange={e => setGroupSize(e.currentTarget.value)} type="text" />
+        {errors.properties?.groupSize?.errors?.length && <ul className="list-disc pl-4">{errors.properties.groupSize.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error === "Invalid input: expected number, received NaN" ? "Group size must be a valid number" : error}</li>))}</ul>}
       </Field>
 
       <Field >
         <FieldLabel>Price</FieldLabel>
-        <Input name="price" required value={price}
+        <Input name="price" placeholder="Price" required value={price}
           onChange={e => setPrice(e.currentTarget.value)} type="text" />
+        {errors.properties?.price?.errors?.length && <ul className="list-disc pl-4">{errors.properties.price.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error === "Invalid input: expected number, received NaN" ? "Price must be a valid number" : error}</li>))}</ul>}
       </Field>
 
       <Field >
         <FieldLabel>Add image</FieldLabel>
-        <Input name="tourImage" required onChange={(e) => {
+        <Input name="tourImage" placeholder="Add tour image" required onChange={(e) => {
           const file = e.currentTarget.files?.[0];
           file && setTourImage(file)
         }} type="file" accept="image/*" />
+        {errors.properties?.tourImage?.errors?.length && <ul className="list-disc pl-4">{errors.properties.tourImage.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
       </Field>
 
       {/* itinerary */}
       <h2 className="font-semibold text-lg py-2">Itinerary</h2>
-      {itineraries.map(({ activities, subtitle, itineraryImage }, itineraryIndex) => (
+      {itineraries.map(({ activities, subtitle }, itineraryIndex) => (
         <div key={itineraryIndex} className="flex flex-col gap-2">
 
           <div className="flex justify-between">
             <p className="font-medium text-md bg-green-600 px-2 rounded-md items-center flex text-black">Day {itineraryIndex + 1}</p>
-            <Button type="button" variant="destructive" onClick={() => removeItinerary(itineraryIndex)}>Remove itinerary</Button>
+            <Button
+              type="button"
+              disabled={itineraries.length === 1}
+              variant="destructive"
+              onClick={() => removeItinerary(itineraryIndex)}>Remove itinerary</Button>
           </div>
 
           <Field >
             <FieldLabel>Subtitle</FieldLabel>
-            <Input name="subtitle" required
+            <Input name="subtitle" required placeholder="Subtitle"
               onChange={(e) => { handleItinerarySubtitle(itineraryIndex, e.currentTarget.value) }}
               value={subtitle} type="text" />
+            {errors.properties?.itineraries?.items?.[itineraryIndex]?.properties?.subtitle?.errors?.length && <ul className="list-disc pl-4">{errors.properties.itineraries.items[itineraryIndex].properties.subtitle.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
           </Field>
 
           <Field className="w-full">
@@ -466,15 +543,17 @@ export default function CreateTourForm() {
                     <Input
                       name="itineraryActivities"
                       required
+                      placeholder="Activity"
                       type="text"
                       value={activity}
                       onChange={(e) => handleItineraryActivity(itineraryIndex, activityIndex, e.target.value)}
                     />
                     <Button type="button"
+                      disabled={activities.length === 1}
                       onClick={() => removeItineraryActivityField(itineraryIndex, activityIndex)}
                       variant="destructive">Remove activity</Button>
                   </div>
-
+                  {errors.properties?.itineraries?.items?.[itineraryIndex]?.properties?.activities?.items?.[activityIndex]?.errors?.length && <ul className="list-disc pl-4">{errors.properties.itineraries.items[itineraryIndex].properties.activities.items[activityIndex].errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
                 </div>
               ))}
               <Button type="button" onClick={() => addItineraryActivityField(itineraryIndex)}
@@ -486,6 +565,7 @@ export default function CreateTourForm() {
           <Field>
             <FieldLabel>Add image</FieldLabel>
             <Input
+              placeholder="Add itinerary image"
               required
               onChange={(e) => {
                 const file = e.currentTarget.files?.[0]
@@ -494,6 +574,7 @@ export default function CreateTourForm() {
                   file)
               }}
               type="file" accept="image/*" />
+              {errors.properties?.itineraries?.items?.[itineraryIndex]?.properties?.itineraryImage?.errors?.length && <ul className="list-disc pl-4">{errors.properties.itineraries.items[itineraryIndex].properties.itineraryImage.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
           </Field>
 
         </div>

@@ -19,7 +19,7 @@ export default async function ToursPage({ searchParams }: {
     const { success, data, error } = await getTours({ limit, page, search });
 
     error && console.error('An error occurred fetching tours data', error);
-    success && data && console.log('Successfully fetched tours data', data);
+    success && data && console.log('Successfully fetched tours data');
 
     const { tours, meta } = data!;
 
@@ -31,8 +31,8 @@ export default async function ToursPage({ searchParams }: {
     return (
         <div className="flex flex-col py-6 ml-4 mr-6 gap-6">
             <div className="flex justify-between">
-            <BreadCrumb currentPage="Tours" />
-            <Link className="flex gap-2 py-1 px-2 border-black text-sm bg-black rounded-md text-white items-center" href="/tours/create-tour">Create new tour <PlusIcon size={16}/> </Link>
+                <BreadCrumb currentPage="Tours" />
+                <Link className="flex gap-2 py-1 px-2 border-black text-sm bg-black rounded-md text-white items-center" href="/tours/create-tour">Create new tour <PlusIcon size={16} /> </Link>
             </div>
             <SearchInput path="tours" placeholder="Search tours..." />
             {tours.length ? <TableData headers={headers} data={tours} /> : <p className="text-sm font-medium">No tours at the moment.</p>}

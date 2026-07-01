@@ -4,8 +4,13 @@ import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from "./u
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Button } from "./ui/button";
-import { PlusIcon } from "lucide-react";
+import { LoaderIcon, PlusIcon } from "lucide-react";
 import z from "zod";
+import { useRouter } from "next/navigation";
+import { Dialog, DialogHeader, DialogDescription, DialogContent } from "./ui/dialog";
+import { cn } from "@/lib/utils";
+import { Spinner } from "./tour-spinner-custom";
+import { toast } from "sonner";
 
 type StorySection = {
     section: string;
@@ -20,41 +25,109 @@ const storySectionSchema = z.object({
     section: z.string().trim().min(1, "Section cannot be empty"),
     subtitle: z.string().trim().min(1, "Subtitle cannot be empty"),
     content: z.string().trim().min(1, "Content cannot be empty"),
-    image: z.instanceof(File, { message: "Please upload an image file" })
-        .refine(file => file.size <= 5 * 1024 * 1024, { message: "Image size must be less than 5MB" })
-        .refine(file => ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG, PNG, and GIF images are allowed" })
+    image: z.instanceof(File)
+        .nullable()
+        .optional()
+        .refine(file => !file || file.size <= 5 * 1024 * 1024, { message: "Image size must be less than 5MB" })
+        .refine(file => !file || ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG, PNG, and GIF images are allowed" })
 });
 
 const BlogCreationSchema = z.object({
     title: z.string().trim().min(1, "Title cannot be empty"),
     intro: z.string().trim().min(1, "Introduction cannot be empty"),
     conclusion: z.string().trim().min(1, "Conclusion cannot be empty"),
+    blogImage: z.instanceof(File)
+        .refine(file => file.size > 0, { message: "Blog image is required" })
+        .refine(file => ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG, PNG, and GIF images are allowed" })
+        .refine(file => file.size < 5 * 1024 * 1024, { message: "Maximum allowed file size is 5MB" }),
     storySections: z.array(storySectionSchema).min(1, "At least one story section is required")
 });
 
 export function CreateBlogForm() {
 
+    const router = useRouter();
     const [title, setTitle] = useState<string>("");
     const [intro, setIntro] = useState<string>("");
     const [conclusion, setConclusion] = useState<string>("");
+    const [blogImage, setBlogImage] = useState<File | null>(null);
     const [storySections, setStorySections] = useState<StorySection[]>([initialBlogData(1)]);
 
     const [errors, setErrors] = useState<any>({});
     const [loading, setLoading] = useState<boolean>(false);
 
+    const [generalError, setGeneralError] = useState<string | null>(null);
+
     const addStorySection = (section: number) => {
         return setStorySections(prev => [...prev, initialBlogData(section)])
     }
 
-    const handleBlogSubmit = (e: SubmitEvent<HTMLFormElement>) => {
+    const handleBlogSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        setLoading(true);
-        const validationResult = BlogCreationSchema.safeParse({ title, intro, conclusion, storySections });
-        setLoading(false);
-        if (!validationResult.success) {
-            setErrors(z.treeifyError(validationResult.error));
-            return;
+        try {
+            setLoading(true);
+            const validationResult = BlogCreationSchema.safeParse({ title, intro, conclusion, blogImage, storySections });
+
+            if (!validationResult.success) {
+                setErrors(z.treeifyError(validationResult.error));
+                setLoading(false);
+                return;
+            }
+
+            // blog data
+            const blogFormData = new FormData();
+
+            blogFormData.append('blog',
+                JSON.stringify({
+                    title,
+                    intro,
+                    conclusion,
+                    sections: storySections.map(section => ({
+                        section: section.section,
+                        subtitle: section.subtitle,
+                        content: section.content
+                    }))
+                })
+            );
+
+            // section images
+
+            storySections.forEach((section, index) => {
+                blogFormData.append('sectionImages', section.image as File);
+            })
+
+            // blog image
+            blogFormData.append('blogImage', blogImage as File);
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/blogs`, {
+                method: 'POST',
+                body: blogFormData
+            });
+
+            const { success, error, data } = await res.json();
+
+            if (!success) {
+                toast.error(error || 'An unknown error occurred while creating the blog');
+                setGeneralError(error || 'An unknown error occurred');
+                setLoading(false);
+                return;
+            }
+
+            toast.success('Blog created successfully!', {
+                description: 'New blog has been created successfully.',
+                duration: 4000,
+                action: {
+                    label: 'View Blog',
+                    onClick: () => router.push(`/blogs/${data.id}`)
+                }
+            });
+
+            setLoading(false);
+            router.push('/blogs');
+
+        } catch (error) {
+            setLoading(false);
+            setGeneralError(error instanceof Error ? error.message : 'An unknown error occurred');
         }
     }
 
@@ -70,10 +143,15 @@ export function CreateBlogForm() {
                 <Textarea id="intro" value={intro} onChange={(e) => setIntro(e.target.value)} required />
                 {errors.properties?.intro?.errors?.length && <ul className="list-disc pl-4">{errors.properties.intro.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
             </Field>
-            
+            <Field>
+                <FieldLabel htmlFor="blogImage">Blog Image</FieldLabel>
+                <Input type="file" id="blogImage" onChange={(e) => setBlogImage(e.target.files ? e.target.files[0] : null)} required />
+                {errors.properties?.blogImage?.errors?.length && <ul className="list-disc pl-4">{errors.properties.blogImage.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
+            </Field>
+            <FieldError>{generalError}</FieldError>
 
             <FieldGroup>
-                <FieldDescription>Story Sections</FieldDescription>
+                <FieldDescription className="font-semibold text-lg py-2">Story Sections</FieldDescription>
                 {storySections.map((section, index) => (
                     <div key={index} className="flex flex-col gap-2">
                         <div className="flex justify-between">
@@ -92,9 +170,9 @@ export function CreateBlogForm() {
                                 setStorySections(newSections);
                             }} />
                             {errors.properties?.storySections?.items?.[index]?.properties?.subtitle?.errors?.length && <ul className="list-disc pl-4">{errors.properties.storySections.items[index].properties.subtitle.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
-                        </Field>                        
-                        
-                        
+                        </Field>
+
+
                         <Field>
                             <FieldLabel htmlFor={`content-${index}`}>Content</FieldLabel>
                             <Textarea required id={`content-${index}`} value={section.content} onChange={(e) => {
@@ -104,10 +182,10 @@ export function CreateBlogForm() {
                             }} />
                             {errors.properties?.storySections?.items?.[index]?.properties?.content?.errors?.length && <ul className="list-disc pl-4">{errors.properties.storySections.items[index].properties.content.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
                         </Field>
-                        
+
                         <Field>
                             <FieldLabel htmlFor={`image-${index}`}>Image</FieldLabel>
-                            <Input required type="file" id={`image-${index}`} onChange={(e) => {
+                            <Input type="file" id={`image-${index}`} onChange={(e) => {
                                 const newSections = [...storySections];
                                 newSections[index].image = e.target.files ? e.target.files[0] : null;
                                 setStorySections(newSections);
@@ -130,6 +208,20 @@ export function CreateBlogForm() {
             <Button disabled={loading} type="submit">
                 {loading ? 'Creating...' : 'Create Blog'}
             </Button>
+            {loading && (
+                <Dialog open={loading}>
+                    <DialogContent
+                        className="sm:max-w-sm"
+                        onInteractOutside={(e) => e.preventDefault()}
+                        showCloseButton={false}
+                        onEscapeKeyDown={(e) => e.preventDefault()}
+                    >
+                        <div className="flex flex-col items-center gap-4 py-6">
+                            <p className="font-bold text-md">Creating Blog</p><Spinner />
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
         </Form>
     )
 }

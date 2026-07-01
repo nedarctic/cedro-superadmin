@@ -42,7 +42,7 @@ const tourValidationSchema = z.object({
     included: z.array(z.string().min(1, 'Included item field cannot be empty')),
     tourImage: z.instanceof(File)
         .refine(file => file.size > 0, { message: "Tour image missing" })
-        .refine(file => ['image/png', 'image/jpeg'].includes(file.type), { message: "Only JPEG and PNG images allowed" })
+        .refine(file => ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG and PNG images allowed" })
         .refine(file => file.size < 5 * 1024 * 1024, { message: "Maximum allowed file size is 5MB" })
 });
 

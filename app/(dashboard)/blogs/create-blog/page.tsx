@@ -1,5 +1,3 @@
-'use client'
-
 import { BreadCrumb } from "@/components/breadcrumb";
 import { CreateBlogForm } from "@/components/create-blog-form";
 

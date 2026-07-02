@@ -15,7 +15,7 @@ export default async function ToursPage({ searchParams }: {
     }>
 }) {
 
-    const { limit, page, search } = await searchParams;
+    const { limit = "10", page, search } = await searchParams;
     const { success, data, error } = await getTours({ limit, page, search });
 
     error && console.error('An error occurred fetching tours data', error);
@@ -29,14 +29,16 @@ export default async function ToursPage({ searchParams }: {
     ];
 
     return (
-        <div className="flex flex-col py-6 ml-4 mr-6 gap-6">
+        <div className="flex flex-col py-6 ml-4 mr-6 gap-6 h-full">
             <div className="flex justify-between">
                 <BreadCrumb currentPage="Tours" />
-                <Link className="flex gap-2 py-1 px-2 border-black text-sm bg-black rounded-md text-white items-center" href="/tours/create-tour">Create new tour <PlusIcon size={16} /> </Link>
+                <Link className="flex gap-2 py-1 px-2 border-black text-sm bg-black rounded-md text-white items-center" href="/tours/create-tour"><PlusIcon size={16} />Create new tour</Link>
             </div>
-            <SearchInput path="tours" placeholder="Search tours..." />
-            {tours.length ? <TableData headers={headers} data={tours} /> : <p className="text-sm font-medium">No tours at the moment.</p>}
-            {tours.length ? <PaginationComponent path="tours" meta={meta} /> : ''}
+            <SearchInput placeholder="Search tours..." />
+            <div className="flex flex-col justify-between min-h-4/5">
+                {tours.length ? <TableData headers={headers} data={tours} /> : <p className="text-sm font-medium">No tours at the moment.</p>}
+                {tours.length ? <PaginationComponent meta={meta} /> : ''}
+            </div>
         </div>
     )
 }

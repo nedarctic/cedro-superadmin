@@ -11,23 +11,23 @@ export async function getTours(options: {
         tours: Tour[];
         meta: {
             page: number;
-            limit: number;
+            limit?: number;
             total: number;
-            totalPages: number;
+            totalPages?: number;
         }
     }
 }> {
     try {
 
         const {
-            limit = "10",
+            limit,
             page = "1",
             search
         } = options;
 
         const params = new URLSearchParams();
         params.set('page', page);
-        params.set('limit', limit);
+        limit && params.set('limit', limit);
         search && params.set('search', search);
 
         const url = new URL(`${process.env.NEST_API_URL}/tours?${params.toString()}`)
@@ -40,7 +40,7 @@ export async function getTours(options: {
             const errorMessage = await res.json();
             return {
                 success: false,
-                error: errorMessage,
+                error: errorMessage.error.message,
             }
         }
 

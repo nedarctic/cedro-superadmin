@@ -20,7 +20,7 @@ function useDebounce<T>(value: T, delay = 400) {
     return debouncedValue;
 }
 
-export function SearchInput({placeholder, path}: {placeholder: string, path: string}) {
+export function SearchInput({placeholder}: {placeholder: string}) {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -32,8 +32,9 @@ export function SearchInput({placeholder, path}: {placeholder: string, path: str
         const params = new URLSearchParams(searchParams);
         debouncedSearch?.trim() ? params.set('search', debouncedSearch) : params.delete('search');
         search && params.set('search', search);
-        router.replace(`/${path}?${params.toString()}`)
-    }, [debouncedSearch, router]);
+        search && params.set('page', '1');
+        router.push(`?${params.toString()}`)
+    }, [debouncedSearch, router, search]);
 
     return (
         <Field className="w-full">

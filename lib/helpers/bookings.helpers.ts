@@ -6,14 +6,14 @@ export async function getBookings(options: {
     try {
 
         const {
-            limit = "10",
+            limit,
             page = "1",
             search
         } = options;
 
         const params = new URLSearchParams();
         params.set('page', page);
-        params.set('limit', limit);
+        limit && params.set('limit', limit);
         search && params.set('search', search);
 
         const url = new URL(`${process.env.NEST_API_URL}/bookings?${params.toString()}`)

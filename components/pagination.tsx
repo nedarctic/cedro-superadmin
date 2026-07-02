@@ -10,80 +10,85 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useSearchParams } from "next/navigation";
+import { Button } from "./ui/button";
+import { useRouter } from "next/navigation";
 
 type PaginationMeta = {
   page: number;
-  limit: number;
+  limit?: number;
   total: number;
-  totalPages: number;
+  totalPages?: number;
 };
 
 export function PaginationComponent({
-  path,
   meta,
 }: {
-  path: string;
   meta: PaginationMeta;
 }) {
   const searchParams = useSearchParams();
-
-  const createPageUrl = (page: number) => {
-    const params = new URLSearchParams(searchParams);
-
-    params.set("page", page.toString());
-
-    return `/${path}?${params.toString()}`;
-  };
+  const router = useRouter();
 
   const hasPrevious = meta.page > 1;
-  const hasNext = meta.page < meta.totalPages;
+  const hasNext = meta.page < meta?.totalPages!;
+
+  const handleNext = () => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', (meta.page + 1).toString())
+    router.push(`?${params.toString()}`)
+  }
+
+  const handlePrevious = () => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', (meta.page - 1).toString())
+    router.push(`?${params.toString()}`);
+  }
 
   return (
     <Pagination>
       <PaginationContent>
 
-        {hasPrevious && (
-          <PaginationItem>
-            <PaginationPrevious href={createPageUrl(meta.page - 1)} />
-          </PaginationItem>
-        )}
+
+        <PaginationItem>
+          <Button
+            variant="ghost"
+            onClick={handlePrevious} disabled={!hasPrevious}><PaginationPrevious /></Button>
+        </PaginationItem>
+
 
         {meta.page > 1 && (
           <PaginationItem>
-            <PaginationLink href={createPageUrl(meta.page - 1)}>
-              {meta.page - 1}
-            </PaginationLink>
+            <Button onClick={handlePrevious} variant="ghost">{meta.page - 1}</Button>
           </PaginationItem>
         )}
 
         <PaginationItem>
-          <PaginationLink
-            href={createPageUrl(meta.page)}
-            isActive
-          >
-            {meta.page}
-          </PaginationLink>
+          <Button
+            onClick={() => router.refresh()}
+            variant="outline">{meta.page}</Button>
         </PaginationItem>
 
         {hasNext && (
           <PaginationItem>
-            <PaginationLink href={createPageUrl(meta.page + 1)}>
-              {meta.page + 1}
-            </PaginationLink>
+            <Button
+              onClick={handleNext}
+              variant="ghost"
+            >{meta.page + 1}</Button>
           </PaginationItem>
         )}
 
-        {meta.totalPages - meta.page > 1 && (
+        {meta?.totalPages! - meta.page > 1 && (
           <PaginationItem>
             <PaginationEllipsis />
           </PaginationItem>
         )}
 
-        {hasNext && (
-          <PaginationItem>
-            <PaginationNext href={createPageUrl(meta.page + 1)} />
-          </PaginationItem>
-        )}
+        <PaginationItem>
+          <Button
+            variant="ghost"
+            onClick={handleNext}
+            disabled={!hasNext}><PaginationNext /></Button>
+        </PaginationItem>
+
 
       </PaginationContent>
     </Pagination>

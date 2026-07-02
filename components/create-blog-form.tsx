@@ -1,3 +1,5 @@
+'use client'
+
 import { SubmitEvent, useState } from "react";
 import { Form } from "./ui/form";
 import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from "./ui/field";

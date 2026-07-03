@@ -27,7 +27,7 @@ export default async function BlogsPage() {
             </div>
             <SearchInput placeholder="Search blogs..." />
             <div className="flex flex-col justify-between min-h-4/5">
-                {blogs.length ? <TableData headers={headers} data={blogs} /> : <p className="text-sm font-medium">No tours at the moment.</p>}
+                {blogs.length ? <TableData path="/blogs" headers={headers} data={blogs} /> : <p className="text-sm font-medium">No tours at the moment.</p>}
                 {blogs.length ? <PaginationComponent meta={meta} /> : ''}
             </div>
         </div>

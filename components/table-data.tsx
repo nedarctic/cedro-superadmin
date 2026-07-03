@@ -33,7 +33,7 @@ export function TableData({
             </TableHeader>
             <TableBody>
                 {data.map((item: any, index: number) =>
-                    <TableRow key={item.id} onClick={() => router.push(`${path}/${item.id}`)}>
+                    <TableRow key={item.id} className="cursor-pointer" onClick={() => router.push(`${path}/${item.id}`)}>
                         <TableCell>{skip + index + 1}</TableCell>
                         {headers.map(({ key }, index) => (
                             <TableCell className={`${index === headers.length - 1 ? 'text-right' : ''}`} key={index}>{item[key]}</TableCell>

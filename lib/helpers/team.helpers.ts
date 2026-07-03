@@ -19,27 +19,34 @@ export async function getTeam (options: {
     error?: string;
 }> {
     try {
-        const { limit = "10", page = "1", search } = options;
+        const { limit, page, search } = options;
+
+        console.log('limit', limit, 'page', page, 'search', search)
         const params = new URLSearchParams();
 
-        params.set('page', page);
-        params.set('limit', limit);
+        page && params.set('page', page);
+        limit && params.set('limit', limit);
         search && params.set('search', search);
+
+        console.log('params', params.toString())
 
         const res = await fetch(`${process.env.NEST_API_URL}/team?${params.toString()}`, {
             method: 'GET'
         });
 
+        console.log('response', res)
+
         if (!res.ok) {
-            const errorMessage = await res.json();
-            console.log('error fetching team members', errorMessage.error.message)
+            const error = (await res.json()).message;
+            console.log('error fetching team members', error)
             return {
                 success: false,
-                error: errorMessage.error.message
+                error
             }
         }
 
         const { data, success } = await res.json();
+        console.log('team data', data)
 
         return {
             success,
@@ -62,7 +69,7 @@ export async function getMember (memberId: string) {
         });
 
         if (!res.ok) {
-            const error = (await res.json()).error.message;
+            const error = (await res.json()).message;
             return {
                 success: false,
                 error: error || 'Backend request error'

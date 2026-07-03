@@ -1,3 +1,5 @@
+import { Booking } from "../types/booking";
+
 export async function getBookings(options: {
     page?: string,
     limit?: string,
@@ -45,4 +47,37 @@ export async function getBookings(options: {
         }
     }
 
+}
+
+// get booking
+export async function getBooking (bookingId: string): Promise<{
+    data?: Booking;
+    success: boolean;
+    error?: string;
+}> {
+    try {
+        const res = await fetch(`${process.env.NEST_API_URL}/bookings/${bookingId}`, {
+            method: 'GET'
+        });
+
+        if (!res.ok) {
+            const error = (await res.json()).error.message;
+            return {
+                success: false,
+                error: error || 'Backend request error'
+            }
+        }
+
+        const { success, data } = await res.json();
+        
+        return {
+            success,
+            data
+        }
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : String(error)
+        }
+    }
 }

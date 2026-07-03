@@ -9,4 +9,4 @@ export type Booking = {
     tour: Tour;
     createdAt: string;
     updatedAt: string;
-}[]
+}

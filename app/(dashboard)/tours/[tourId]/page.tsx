@@ -2,6 +2,8 @@ import { BreadCrumb } from "@/components/breadcrumb"
 import { Button } from "@/components/ui/button"
 import { PencilIcon } from "lucide-react"
 import { getTour } from "@/lib/helpers/tours.helpers";
+import { EditAssetBtn } from "@/components/edit-asset-btn";
+import { DeleteAssetBtn } from "@/components/delete-asset-btn";
 
 export default async function TourDetailsPage({ params }: { params: Promise<{ tourId: string }> }) {
 
@@ -20,8 +22,8 @@ export default async function TourDetailsPage({ params }: { params: Promise<{ to
             <div className="flex justify-between">
                 <BreadCrumb crumbs={crumbs} currentPage="Tour Details" />
                 <div className="flex items-center gap-4">
-                    <Button variant="outline"><PencilIcon size={16} />Edit Tour</Button>
-                    <Button variant="destructive">Delete Tour</Button>
+                    <EditAssetBtn path={`/tours/${tourId}/edit-booking`} label={"Edit Tour"}/>
+                    <DeleteAssetBtn label="Delete Tour" />
                 </div>
             </div>
             <div className="min-h-4/5 flex flex-col items-start justify-start">

@@ -5,6 +5,7 @@ import { PaginationComponent } from "@/components/pagination";
 import { getBookings } from "@/lib/helpers/bookings.helpers";
 import Link from "next/link";
 import { PlusIcon } from "lucide-react";
+import { CreateAssetBtn } from "@/components/create-asset-btn";
 
 export default async function BookingsPage(
     { searchParams }: {
@@ -34,7 +35,7 @@ export default async function BookingsPage(
         <div className="flex flex-col py-6 ml-4 mr-6 gap-6 h-full">
             <div className="flex justify-between">
                 <BreadCrumb currentPage="Bookings" />
-                <Link className="flex gap-2 py-1 px-2 border-black text-sm bg-black rounded-md text-white items-center" href="/bookings/create-booking"><PlusIcon size={16} />Create new booking</Link>
+                <CreateAssetBtn path={"/bookings/create-booking"} label={"Create Booking"}/>
             </div>
             <SearchInput placeholder="Search bookings..." />
             <div className="flex flex-col justify-between min-h-4/5">

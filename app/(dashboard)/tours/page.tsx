@@ -1,4 +1,5 @@
 import { BreadCrumb } from "@/components/breadcrumb";
+import { CreateAssetBtn } from "@/components/create-asset-btn";
 import { PaginationComponent } from "@/components/pagination";
 import { SearchInput } from "@/components/search-input";
 import { TableData } from "@/components/table-data";
@@ -32,7 +33,7 @@ export default async function ToursPage({ searchParams }: {
         <div className="flex flex-col py-6 ml-4 mr-6 gap-6 h-full">
             <div className="flex justify-between">
                 <BreadCrumb currentPage="Tours" />
-                <Link className="flex gap-2 py-1 px-2 border-black text-sm bg-black rounded-md text-white items-center" href="/tours/create-tour"><PlusIcon size={16} />Create new tour</Link>
+                <CreateAssetBtn path={"/tours/create-tour"} label={"Create Tour"}/>
             </div>
             <SearchInput placeholder="Search tours..." />
             <div className="flex flex-col justify-between min-h-4/5 gap-6">

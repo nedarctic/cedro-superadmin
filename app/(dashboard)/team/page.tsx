@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getTeam } from "@/lib/helpers/team.helpers";
 import { PaginationComponent } from "@/components/pagination";
 import { MemberCard } from "@/components/member-card";
+import { CreateAssetBtn } from "@/components/create-asset-btn";
 
 export default async function TeamPage({ searchParams }: {
     searchParams: Promise<{
@@ -26,7 +27,7 @@ export default async function TeamPage({ searchParams }: {
         <div className="flex flex-col py-6 ml-4 mr-6 gap-6 h-full">
             <div className="flex justify-between">
                 <BreadCrumb currentPage="Team" />
-                <Link className="flex gap-2 py-1 px-2 border-black text-sm bg-black rounded-md text-white items-center" href="/team/create-member"><PlusIcon size={16} />Add new member</Link>
+                <CreateAssetBtn path={"/team/create-member"} label={"Create Member"}/>
             </div>
             <SearchInput placeholder="Search members..." />
             <div className="flex flex-col justify-between gap-6 min-h-4/5">

@@ -2,6 +2,8 @@ import { BreadCrumb } from "@/components/breadcrumb"
 import { Button } from "@/components/ui/button"
 import { PencilIcon } from "lucide-react"
 import { getBlog } from "@/lib/helpers/blogs.helpers";
+import { EditAssetBtn } from "@/components/edit-asset-btn";
+import { DeleteAssetBtn } from "@/components/delete-asset-btn";
 
 export default async function BlogDetailsPage({ params }: { params: Promise<{ blogId: string }> }) {
 
@@ -20,8 +22,8 @@ export default async function BlogDetailsPage({ params }: { params: Promise<{ bl
             <div className="flex justify-between">
                 <BreadCrumb crumbs={crumbs} currentPage="Blog Details" />
                 <div className="flex items-center gap-4">
-                    <Button variant="outline"><PencilIcon size={16} />Edit Blog</Button>
-                    <Button variant="destructive">Delete Blog</Button>
+                    <EditAssetBtn label="Edit Blog" path={`/blogs/${blogId}/edit-blog`} />
+                    <DeleteAssetBtn label={"Delete Blog"} />
                 </div>
             </div>
             <div className="min-h-4/5 flex flex-col items-start justify-start">

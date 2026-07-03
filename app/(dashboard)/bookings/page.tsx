@@ -38,7 +38,7 @@ export default async function BookingsPage(
             </div>
             <SearchInput placeholder="Search bookings..." />
             <div className="flex flex-col justify-between min-h-4/5">
-                {bookings.length ? <TableData headers={headers} data={bookings} /> : <p className="text-sm font-medium">No bookings at the moment</p>}
+                {bookings.length ? <TableData path={"/bookings"} headers={headers} data={bookings} /> : <p className="text-sm font-medium">No bookings at the moment</p>}
                 {bookings.length ? <PaginationComponent meta={meta} /> : ''}
             </div>
         </div>

@@ -3,19 +3,22 @@
 import { Booking } from "@/lib/types/booking";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 export function TableData({
     headers,
-    data
+    data,
+    path
 }: {
-    data: any,
+    data: any;
     headers: {
-        label: string,
-        key: string
-    }[]
+        label: string;
+        key: string;
+    }[],
+    path: string;
 }) {
     const searchParams = useSearchParams();
-
+    const router = useRouter();
     const page = parseInt(searchParams.get('page') || "1", 10);
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const skip = (page - 1) * limit;
@@ -30,7 +33,7 @@ export function TableData({
             </TableHeader>
             <TableBody>
                 {data.map((item: any, index: number) =>
-                    <TableRow key={item.id}>
+                    <TableRow key={item.id} onClick={() => router.push(`${path}/${item.id}`)}>
                         <TableCell>{skip + index + 1}</TableCell>
                         {headers.map(({ key }, index) => (
                             <TableCell className={`${index === headers.length - 1 ? 'text-right' : ''}`} key={index}>{item[key]}</TableCell>

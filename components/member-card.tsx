@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "./ui/card"
 import { Button } from "./ui/button"
 import { TeamMember } from "@/lib/types/team-member"
 import { useRouter } from "next/navigation"
+import { UpdateMemberDrawer } from "./update-member-drawer"
 
 export function MemberCard({ member }: { member: TeamMember }) {
     const router = useRouter();
@@ -20,13 +21,13 @@ export function MemberCard({ member }: { member: TeamMember }) {
                 />
             </div>
         </CardHeader>
-        <CardContent className="flex flex-col justify-between h-full">
+        <CardContent className="flex flex-col justify-between h-full gap-2">
             <div className="flex flex-col">
                 <p className="font-bold text-lg">{member.name}</p>
                 <p className="font-semibold text-md">{member.designation}</p>
                 <p className="text-sm">{member.description}</p>
             </div>
-            <Button className="w-full mt-2" variant="secondary">Update Member</Button>
+            <UpdateMemberDrawer />
         </CardContent>
 
 

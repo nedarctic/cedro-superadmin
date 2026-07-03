@@ -20,15 +20,11 @@ export async function getTeam (options: {
 }> {
     try {
         const { limit, page, search } = options;
-
-        console.log('limit', limit, 'page', page, 'search', search)
         const params = new URLSearchParams();
 
         page && params.set('page', page);
         limit && params.set('limit', limit);
         search && params.set('search', search);
-
-        console.log('params', params.toString())
 
         const res = await fetch(`${process.env.NEST_API_URL}/team?${params.toString()}`, {
             method: 'GET'
@@ -46,7 +42,6 @@ export async function getTeam (options: {
         }
 
         const { data, success } = await res.json();
-        console.log('team data', data)
 
         return {
             success,

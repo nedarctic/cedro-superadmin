@@ -1,5 +1,6 @@
 import { Tour } from "../types/tour";
 
+// get tours
 export async function getTours(options: {
     page?: string,
     limit?: string,
@@ -59,4 +60,37 @@ export async function getTours(options: {
         }
     }
 
+}
+
+// get tour
+export async function getTour (tourId: string): Promise<{
+    success: boolean;
+    data?: Tour,
+    error?: string;
+}> {
+    try {
+        const res = await fetch(`${process.env.NEST_API_URL}/tours/${tourId}`, {
+            method: 'GET'
+        });
+
+        if (!res.ok) {
+            const error = (await res.json()).error.message;
+            return {
+                success: false,
+                error: error || 'Backend request error'
+            }
+        }
+
+        const { success, data } = await res.json();
+        
+        return {
+            success,
+            data
+        }
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : String(error)
+        }
+    }
 }

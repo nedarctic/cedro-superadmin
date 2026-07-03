@@ -19,6 +19,14 @@ export async function getDestinations(): Promise<{
             method: 'GET',
         });
 
+        if(!res.ok) {
+            const error = (await res.json()).message;
+            return {
+                success: false,
+                error
+            }
+        }
+
         const { data, success } = await res.json();
 
         return {
@@ -41,7 +49,7 @@ export async function getDestination (destinationId: string) {
         });
 
         if (!res.ok) {
-            const error = (await res.json()).error.message;
+            const error = (await res.json()).message;
             return {
                 success: false,
                 error: error || 'Backend request error'

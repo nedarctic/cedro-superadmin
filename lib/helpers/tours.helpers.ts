@@ -38,10 +38,10 @@ export async function getTours(options: {
         });
 
         if (!res.ok) {
-            const errorMessage = await res.json();
+            const error = (await res.json()).message;
             return {
                 success: false,
-                error: errorMessage.error.message,
+                error: error
             }
         }
 
@@ -74,7 +74,7 @@ export async function getTour (tourId: string): Promise<{
         });
 
         if (!res.ok) {
-            const error = (await res.json()).error.message;
+            const error = (await res.json()).message;
             return {
                 success: false,
                 error: error || 'Backend request error'

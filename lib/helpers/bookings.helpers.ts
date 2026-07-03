@@ -25,10 +25,10 @@ export async function getBookings(options: {
         });
 
         if (!res.ok) {
-            const errorMessage = await res.json();
+            const error = (await res.json()).message;
             return {
                 success: false,
-                error: errorMessage,
+                error,
             }
         }
 

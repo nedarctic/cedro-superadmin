@@ -5,7 +5,7 @@ import { Itinerary } from "./itinerary";
 export type Tour = {
     id: string;
     title: string;
-    description: string[];
+    description: string;
     activities: string[];
     included: string[];
     excluded: string[];

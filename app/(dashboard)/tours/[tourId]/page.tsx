@@ -4,14 +4,16 @@ import { PencilIcon } from "lucide-react"
 import { getTour } from "@/lib/helpers/tours.helpers";
 import { EditAssetBtn } from "@/components/edit-asset-btn";
 import { DeleteAssetBtn } from "@/components/delete-asset-btn";
+import { notFound } from "next/navigation";
 
 export default async function TourDetailsPage({ params }: { params: Promise<{ tourId: string }> }) {
 
     const { tourId } = await params;
     const { success, data, error } = await getTour(tourId)
 
-    !success && console.log('An error occurred fetching tour', error);
-    success && console.log('Successfully fetched tour data', data);
+    if(!success){
+        return notFound();
+    }
 
     const crumbs = [
         { label: 'Tours', link: '/tours' },
@@ -22,7 +24,7 @@ export default async function TourDetailsPage({ params }: { params: Promise<{ to
             <div className="flex justify-between">
                 <BreadCrumb crumbs={crumbs} currentPage="Tour Details" />
                 <div className="flex items-center gap-4">
-                    <EditAssetBtn path={`/tours/${tourId}/edit-booking`} label={"Edit Tour"}/>
+                    <EditAssetBtn path={`/tours/${tourId}/edit-tour`} label={"Edit Tour"}/>
                     <DeleteAssetBtn label="Delete Tour" />
                 </div>
             </div>

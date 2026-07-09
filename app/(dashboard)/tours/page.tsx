@@ -3,10 +3,7 @@ import { CreateAssetBtn } from "@/components/create-asset-btn";
 import { PaginationComponent } from "@/components/pagination";
 import { SearchInput } from "@/components/search-input";
 import { TableData } from "@/components/table-data";
-import { Button } from "@/components/ui/button";
 import { getTours } from "@/lib/helpers/tours.helpers";
-import { PlusIcon } from "lucide-react";
-import Link from "next/link";
 
 export default async function ToursPage({ searchParams }: {
     searchParams: Promise<{

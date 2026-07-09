@@ -175,6 +175,7 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
             };
 
             toast.success('Tour successfully updated');
+            setErrors({});
             setLoading(false);
 
             // 4. Push client to tour detail page

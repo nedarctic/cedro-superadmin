@@ -111,7 +111,7 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
             // 2. Construct data
             const formData = new FormData();
 
-            tourImage && formData.append('tourImage', tourImage as File);
+            tourImage && tourImage.size > 0 && formData.append('tourImage', tourImage);
             formData.append('tour', JSON.stringify({
                 title,
                 description,
@@ -131,15 +131,14 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                 return itineraryImage && itineraryImage.size > 0
             });
 
-            console.log('Updated itineraries', updatedItineraries);
-            console.log('updated itineraries with images', updatedItinerariesWithImages);
-
             const updatedItinerariesImages = updatedItinerariesWithImages.map(({ itineraryImage }) => itineraryImage);
 
             const updatedItinerariesWithoutImages = updatedItineraries.map(({ itineraryImage, ...updatedItinerary }) => updatedItinerary);
-            updatedItinerariesImages.length && updatedItinerariesImages.map(image => formData.append('updatedItinerariesImages', image as File))
-            updatedItinerariesWithoutImages.length && formData.append('updatedItineraries', JSON.stringify(updatedItinerariesWithoutImages))
-            updatedItinerariesRels.length && formData.append('updatedItinerariesRels', JSON.stringify({ updatedItinerariesRels }))
+            updatedItinerariesImages.length > 0 && updatedItinerariesImages.map(image => formData.append('updatedItinerariesImages', image as File))
+            const updated = updatedItinerariesWithoutImages.map(({itineraryImageUrl, ...updatedItinerary}) => ({...updatedItinerary}))
+            
+            updated.length && formData.append('updatedItineraries', JSON.stringify(updated))
+            updatedItinerariesRels.length && formData.append('updatedItinerariesRels', JSON.stringify({ updatedItinerariesRels }));
 
 
             const newItinerariesImages = itineraries.filter(({ itineraryImageUrl }) => itineraryImageUrl === undefined).map(({ itineraryImage }) => itineraryImage as File);
@@ -147,43 +146,47 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
             const newItineraries = itineraries.filter(({ itineraryImageUrl }) => itineraryImageUrl === undefined)
                 .map(({ itineraryImage, itineraryImageUrl, ...itinerary }) => itinerary);;
             newItineraries.length && formData.append('newItineraries', JSON.stringify(newItineraries));
-            console.log("Updated itinerary image rels", updatedItinerariesRels)
 
-            // 3. Send request
+            for (const [key, value] of formData.entries()) {
+                console.log('key', key);
+                console.log('value', value)
+            }
+
+            // 3. Send the request
             const res = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations/${tour.destinationId}/tours/${tour.id}`, {
                 method: 'PATCH',
                 body: formData
             })
 
             if (!res.ok) {
-                const error = (await res.json()).message;
-                toast.error('An error occurred', { description: error })
                 setLoading(false);
+                toast.error('An error occurred', { description: await res.text() });                
                 return;
             }
 
-            const { success, data, error } = await res.json();
+            const { data, success, error } = await res.json();
 
-            if (!success) {
-                toast.error('An error occurred', { description: error })
+            if (!success) {    
+                setLoading(false);            
+                toast.error('Update failed');
+                console.log('success', success);
+                console.log('error', error)
+                
                 return;
             }
 
-
-            for (const [key, value] of formData.entries()) {
-                console.log("Key:", key, "\n", "Value:", value);
-            };
-
+            setLoading(false);
             toast.success('Tour successfully updated');
             setErrors({});
-            setLoading(false);
+            
 
-            // 4. Push client to tour detail page
+            // 4. Navigate client to tour detail page
             router.push(`/tours/${tour.id}`);
         } catch (error) {
+            setLoading(false);
             toast.error('An error occurred', {
                 description: error instanceof Error && error.message || 'Service temporarily unavailable'
-            })
+            });            
         }
     }
 
@@ -233,6 +236,9 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
             </Field>
             <Field className="flex flex-col gap-1">
                 <FieldLabel>Tour image</FieldLabel>
+                <div className="aspect-video max-w-7xl relative my-2">
+                    <Image src={tour.tourImageUrl} alt={"Tour image"} fill unoptimized className="rounded-2xl" />
+                </div>
                 <Input type="file" onChange={e => setTourImage(e.target.files && e.target.files[0])} />
                 {errors?.properties?.tourImage?.errors?.length &&
                     <ul className="pl-4 list-disc">{errors.properties.tourImage.errors.map((error: string, index: number) =>
@@ -336,7 +342,12 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
 
                         <div className="flex flex-row justify-between">
                             <p className="p-2 rounded-lg bg-green-600 text-sm text-black font-bold w-fit">Day {itineraryIndex + 1}</p>
-                            <Button variant="destructive" className="max-w-fit" disabled={itineraries.length === 1}><Trash2Icon size={16} />Delete</Button>
+                            <Button type="button" variant="destructive" 
+                            className="max-w-fit"
+                            onClick={() => {
+                                setItineraries(prev => [...prev].filter((_, i) => i !== itineraryIndex))
+                            }} 
+                            disabled={itineraries.length === 1}><Trash2Icon size={16} />Delete</Button>
                         </div>
                         <Field className="flex flex-col gap-2">
                             <FieldLabel>Subtitle</FieldLabel>

@@ -76,18 +76,17 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
     const removeField = (
         setter: Dispatch<SetStateAction<string[]>>,
         index: number
-    ) => { 
-        setter(prev => [...prev].filter((_, i) => i !== index ))
+    ) => {
+        setter(prev => [...prev].filter((_, i) => i !== index))
     }
 
-    const onSubmitHandler = (e: SubmitEvent<HTMLFormElement>) => {
+    const onSubmitHandler = async (e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         try {
             setLoading(true);
 
             // 1. Validation
-
             const validationResult = tourSchema.safeParse({
                 title,
                 description,
@@ -110,16 +109,7 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
             }
 
             // 2. Construct data
-
             const formData = new FormData();
-            // tourImage✅ 
-            // tour✅ 
-            // updatedItineraries✅ 
-            // updatedItinerariesImages✅
-            // updatedItinerariesRels✅
-            // newItineraries✅
-            // newItinerariesImages✅
-            // newItinerariesRels✅
 
             tourImage && formData.append('tourImage', tourImage as File);
             formData.append('tour', JSON.stringify({
@@ -134,43 +124,61 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                 excluded,
             }));
 
-            const updatedItinerariesRels = new Map<number, number>();
+            const updatedItinerariesRels: number[] = [];
             const updatedItineraries = itineraries.filter(({ itineraryImageUrl }) => itineraryImageUrl !== undefined);
-            let updatedImageIndex: number = 0;
+            updatedItineraries.forEach(({ itineraryImage }, index) => itineraryImage && itineraryImage.size > 0 && updatedItinerariesRels.push(index));
             const updatedItinerariesWithImages = updatedItineraries.filter(({ itineraryImage }, index) => {
-                if (itineraryImage !== undefined && itineraryImage !== null) {
-                    updatedImageIndex = updatedImageIndex + 1;
-                    updatedItinerariesRels.set(index, updatedImageIndex);
-                }
-                return itineraryImage !== undefined && itineraryImage !== null
+                return itineraryImage && itineraryImage.size > 0
             });
+
+            console.log('Updated itineraries', updatedItineraries);
+            console.log('updated itineraries with images', updatedItinerariesWithImages);
 
             const updatedItinerariesImages = updatedItinerariesWithImages.map(({ itineraryImage }) => itineraryImage);
 
-            updatedItinerariesImages.map(image => formData.append('updatedItinerariesImages', image as File))
-            formData.append('updatedItineraries', JSON.stringify({ updatedItineraries }))
-            formData.append('updatedItinerariesRels', JSON.stringify({ updatedItinerariesRels }))
+            const updatedItinerariesWithoutImages = updatedItineraries.map(({ itineraryImage, ...updatedItinerary }) => updatedItinerary);
+            updatedItinerariesImages.length && updatedItinerariesImages.map(image => formData.append('updatedItinerariesImages', image as File))
+            updatedItinerariesWithoutImages.length && formData.append('updatedItineraries', JSON.stringify(updatedItinerariesWithoutImages))
+            updatedItinerariesRels.length && formData.append('updatedItinerariesRels', JSON.stringify({ updatedItinerariesRels }))
 
 
             const newItinerariesImages = itineraries.filter(({ itineraryImageUrl }) => itineraryImageUrl === undefined).map(({ itineraryImage }) => itineraryImage as File);
-            newItinerariesImages.map(image => formData.append('newItinerariesImages', image))
+            newItinerariesImages.length && newItinerariesImages.map(image => formData.append('newItinerariesImages', image))
             const newItineraries = itineraries.filter(({ itineraryImageUrl }) => itineraryImageUrl === undefined)
                 .map(({ itineraryImage, itineraryImageUrl, ...itinerary }) => itinerary);;
-            formData.append('newItineraries', JSON.stringify({ newItineraries }));
-
-            for (const [key, value] of formData.entries()) {
-                console.log('Key:', key, 'Value:', value)
-            }
+            newItineraries.length && formData.append('newItineraries', JSON.stringify(newItineraries));
+            console.log("Updated itinerary image rels", updatedItinerariesRels)
 
             // 3. Send request
+            const res = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations/${tour.destinationId}/tours/${tour.id}`, {
+                method: 'PATCH',
+                body: formData
+            })
+
+            if (!res.ok) {
+                const error = (await res.json()).message;
+                toast.error('An error occurred', { description: error })
+                setLoading(false);
+                return;
+            }
+
+            const { success, data, error } = await res.json();
+
+            if (!success) {
+                toast.error('An error occurred', { description: error })
+                return;
+            }
+
+
+            for (const [key, value] of formData.entries()) {
+                console.log("Key:", key, "\n", "Value:", value);
+            };
 
             toast.success('Tour successfully updated');
             setLoading(false);
 
-            // 4. Push client to tour detail
-
-
-            // router.push(`/tours/${tour.id}`);
+            // 4. Push client to tour detail page
+            router.push(`/tours/${tour.id}`);
         } catch (error) {
             toast.error('An error occurred', {
                 description: error instanceof Error && error.message || 'Service temporarily unavailable'
@@ -313,10 +321,10 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                                 <li key={index} className="text-red-500 text-sm font-bold">{error}</li>)}</ul>}
                     </div>
                 )}
-                <Button 
-                onClick={() => addField(setExcluded)}
-                type="button" 
-                variant="default"><PlusIcon size={16} />Add item</Button>
+                <Button
+                    onClick={() => addField(setExcluded)}
+                    type="button"
+                    variant="default"><PlusIcon size={16} />Add item</Button>
             </FieldGroup>
 
             {/* itineraries */}
@@ -348,8 +356,9 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                                 <Image
                                     fill
                                     className="rounded-2xl object-cover object-top"
+                                    unoptimized
                                     src={itinerary.itineraryImageUrl!}
-                                    alt={`Day ${itineraryIndex} itinerary image`} />
+                                    alt={`Day ${itineraryIndex + 1} itinerary image`} />
                             </div>
                         }
 
@@ -367,13 +376,13 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                                                 return copy;
                                             })
                                         }} />
-                                        <Button className="max-w-fit" 
-                                        onClick={() => setItineraries(prev => {
-                                            const copy = [...prev];
-                                            copy[itineraryIndex] = {...copy[itineraryIndex], activities: [...copy[itineraryIndex].activities.filter((_, i) => i !== activityIndex)]};
-                                            return copy;
-                                        })}
-                                        variant="destructive">Remove item</Button>
+                                        <Button className="max-w-fit"
+                                            onClick={() => setItineraries(prev => {
+                                                const copy = [...prev];
+                                                copy[itineraryIndex] = { ...copy[itineraryIndex], activities: [...copy[itineraryIndex].activities.filter((_, i) => i !== activityIndex)] };
+                                                return copy;
+                                            })}
+                                            variant="destructive">Remove item</Button>
                                     </div>
                                     {errors?.properties?.itineraries?.items?.[itineraryIndex]?.properties?.activities?.items?.[activityIndex]?.errors?.length &&
                                         <ul className="pl-4 list-disc">{errors.properties.itineraries.items[itineraryIndex].properties.activities.items[activityIndex].errors.map((error: string, index: number) => <li key={index} className="text-red-600 font-bold text-sm">{error}</li>)}</ul>
@@ -382,10 +391,10 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                             )}
                             <Button onClick={() => setItineraries(prev => {
                                 const copy = [...prev];
-                                copy[itineraryIndex] = {...copy[itineraryIndex], activities: [...copy[itineraryIndex].activities, '']};
+                                copy[itineraryIndex] = { ...copy[itineraryIndex], activities: [...copy[itineraryIndex].activities, ''] };
                                 return copy;
-                            })} 
-                            type="button" variant="default"><PlusIcon size={16} />Add item</Button>
+                            })}
+                                type="button" variant="default"><PlusIcon size={16} />Add item</Button>
                         </FieldGroup>
 
                         <Field className="flex flex-col gap-1">

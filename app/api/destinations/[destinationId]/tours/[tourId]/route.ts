@@ -12,7 +12,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
         const { tourId } = await params;
 
         const formData = await req.formData();
-
         const res = await fetch(`${process.env.NEST_API_URL}/tours/${tourId}/test`, {
             method: 'PATCH',
             headers: {
@@ -22,11 +21,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ to
         });
 
         if (!res.ok) {
-            const errorMessage = (await res.json()).message;
-            console.log('error message', errorMessage)
+            const response = await res.json();
             return NextResponse.json({
                 success: false,
-                error: errorMessage.error.message || 'Backend request error'
+                error: response.error.message || 'Backend request error'
             }, { status: res.status })
         }
 

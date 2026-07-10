@@ -6,6 +6,7 @@ import { Button } from "./ui/button"
 import { TeamMember } from "@/lib/types/team-member"
 import { useRouter } from "next/navigation"
 import { UpdateMemberDrawer } from "./update-member-drawer"
+import { DeleteMemberBtn } from "./delete-member-btn"
 
 export function MemberCard({ member }: { member: TeamMember }) {
     const router = useRouter();
@@ -27,7 +28,10 @@ export function MemberCard({ member }: { member: TeamMember }) {
                 <p className="font-semibold text-md">{member.designation}</p>
                 <p className="text-sm">{member.description}</p>
             </div>
-            <UpdateMemberDrawer />
+            <div className="flex flex-col gap-1">
+                <UpdateMemberDrawer teamMember={member} />
+                <DeleteMemberBtn memberId={member.id} />
+            </div>
         </CardContent>
 
 

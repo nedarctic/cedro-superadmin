@@ -3,7 +3,7 @@
 import { Booking } from "@/lib/types/booking";
 import { PencilIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, SubmitEvent } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import {
@@ -26,7 +26,8 @@ export function UpdateBookingDrawer({ booking }: { booking: Booking }) {
     const [loading, setLoading] = useState<boolean>(false);
     const [open, setOpen] = useState<boolean>(false);
 
-    const updateHandler = async () => {
+    const updateHandler = async (e: SubmitEvent) => {
+        e.preventDefault();
         try {
             setLoading(true);
             const url = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations/${booking.tour.destinationId}/tours/${booking.tourId}/bookings/${booking.id}`;
@@ -38,10 +39,6 @@ export function UpdateBookingDrawer({ booking }: { booking: Booking }) {
 
 
             const { success, data, error } = await res.json();
-
-            console.log('Success:', success);
-            console.log('Data:', data);
-            console.log('Error:', error);
 
             if (!res.ok || !success) {
                 setLoading(false);
@@ -56,6 +53,7 @@ export function UpdateBookingDrawer({ booking }: { booking: Booking }) {
             setOpen(false);
 
             toast.success("Booking update successful");
+            router.refresh();
 
         } catch (error) {
             setLoading(false);
@@ -76,7 +74,7 @@ export function UpdateBookingDrawer({ booking }: { booking: Booking }) {
                     <DrawerTitle>Edit Booking</DrawerTitle>
                 </DrawerHeader>
                 <DrawerContent className="h-full">
-                    <Form onSubmit={updateHandler} className="flex flex-col justify-between h-full">
+                    <Form onSubmit={updateHandler} className="flex flex-col justify-between gap-4 h-full">
 
                         <div className="flex flex-col gap-4">
                             <Field>

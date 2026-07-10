@@ -13,8 +13,8 @@ import { toast } from 'sonner';
 import { Textarea } from './ui/textarea';
 
 const memberCreationSchema = z.object({
-    name: z.string().min(1, { message: "Name is required" }),
-    designation: z.string().min(1, { message: "Designation is required" }),
+    name: z.string().min(1, { message: "Name is required" }).max(200, "Name should not exceed 200 characters"),
+    designation: z.string().min(1, { message: "Designation is required" }).max(200, "Designation should not exceed 200 characters"),
     description: z.string().min(1, { message: "Description is required" }).max(200, "Description should not exceed 200 characters"),
     memberImage: z.instanceof(File, { message: "Member image is required" })
         .refine(file => file.size > 0, { message: "File is required" })

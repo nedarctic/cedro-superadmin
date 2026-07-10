@@ -5,6 +5,7 @@ export type TeamMember = {
     description: string;
     memberImageKey: string;
     memberImageUrl: string;
+    level: string;
     createdAt: string;
     updatedAt: string;
 }

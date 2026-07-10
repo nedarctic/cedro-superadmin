@@ -30,7 +30,7 @@ export default async function TourDetailsPage({ params }: { params: Promise<{ to
             <div className="min-h-4/5 flex flex-col items-start justify-start">
                 <h1 className="font-extrabold text-xl lg:text-2xl">{data?.title}</h1>
                 <div className="flex md:flex-row flex-col gap-4 justify-between w-full my-4">
-                    <div className="relative aspect-video flex-2 max-w-4xl">
+                    <div className="relative aspect-video flex-1 max-w-4xl">
                         <Image className="rounded-2xl" unoptimized fill src={data?.tourImageUrl!} alt="Tour image" />
                     </div>
                     <div className="flex-1 space-y-2">
@@ -45,7 +45,7 @@ export default async function TourDetailsPage({ params }: { params: Promise<{ to
                     </div>
                 </div>
                 <hr className="my-4 w-full"/>
-                <div className="flex md:flex-row flex-col justify-between w-full mt-4">
+                <div className="flex md:flex-row flex-col justify-between w-full mt-4 gap-4">
                     <div>
                         <p className="font-bold text-md">Activities:</p>
                         <ul className="list-disc pl-4">{data?.activities.map((activity, index) => <li key={index}>{activity}</li>)}</ul>

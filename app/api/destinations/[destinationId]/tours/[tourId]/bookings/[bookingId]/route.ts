@@ -39,13 +39,7 @@ export async function PATCH(req: NextRequest, { params }: {
                 success: false,
                 error: error || "Backend request error"
             }, { status: res.status });
-        }
-
-        console.log('Success:', success);
-        console.log('Data:', data);
-        console.log('Error:', error);
-
-        success && revalidatePath(`/bookings/${bookingId}`)
+        };
 
         return NextResponse.json({
             success: true,

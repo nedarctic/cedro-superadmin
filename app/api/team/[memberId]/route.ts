@@ -11,11 +11,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ me
         const { accessToken } = session;
         const { memberId } = await params;
 
+        const formData = await req.formData();
+
+        for(const [key, value] of formData.entries()){
+            console.log(key, value)
+        }
+
         const res = await fetch(`${process.env.NEST_API_URL}/team/${memberId}`, {
             method: 'PATCH',
             headers: {
                 Authorization: `Bearer ${accessToken}`,
-            }
+            },
+            body: formData
         })
 
         if (!res.ok) {
@@ -46,6 +53,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ m
         const { accessToken } = session;
         const { memberId } = await params;
 
+        console.log('member id', memberId)
+
         const res = await fetch(`${process.env.NEST_API_URL}/team/${memberId}`, {
             method: 'DELETE',
             headers: {
@@ -53,15 +62,17 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ m
             }
         });
 
+        const { data, success, error } = await res.json();
+
         if (!res.ok) {
-            const error = (await res.json()).error.message;
+            console.log('success deleting member', success)
             return NextResponse.json({
                 success: false,
                 error: error || 'backend request error'
             });
         }
 
-        const { data, success } = await res.json();
+        
 
         return NextResponse.json({
             success,

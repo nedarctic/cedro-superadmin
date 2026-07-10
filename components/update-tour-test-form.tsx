@@ -124,9 +124,9 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                 excluded,
             }));
 
-            const updatedItinerariesRels: number[] = [];
+            const updatedItinerariesRels: string[] = [];
             const updatedItineraries = itineraries.filter(({ itineraryImageUrl }) => itineraryImageUrl !== undefined);
-            updatedItineraries.forEach(({ itineraryImage }, index) => itineraryImage && itineraryImage.size > 0 && updatedItinerariesRels.push(index));
+            updatedItineraries.forEach(({ id, itineraryImage }) => itineraryImage && itineraryImage.size > 0 && updatedItinerariesRels.push(id!));
             const updatedItinerariesWithImages = updatedItineraries.filter(({ itineraryImage }, index) => {
                 return itineraryImage && itineraryImage.size > 0
             });

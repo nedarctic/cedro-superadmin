@@ -1,27 +1,33 @@
 'use client'
 
+import { PlusIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { SubmitEvent, useState } from "react";
+import { toast } from "sonner";
+import z from "zod";
+import { CustomSpinner } from "./custom-spinner";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent } from "./ui/dialog";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "./ui/field";
 import { Form } from "./ui/form";
-import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from "./ui/field";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
-import { Button } from "./ui/button";
-import { LoaderIcon, PlusIcon } from "lucide-react";
-import z from "zod";
-import { useRouter } from "next/navigation";
-import { Dialog, DialogHeader, DialogDescription, DialogContent } from "./ui/dialog";
-import { cn } from "@/lib/utils";
-import { CustomSpinner } from "./custom-spinner";
-import { toast } from "sonner";
 
 type StorySection = {
+    id: string;
     section: string;
     subtitle: string;
     content: string;
     image: File | null;
 };
 
-const initialBlogData = (section: number) => ({ section: `Section ${section}`, subtitle: "", content: "", image: null })
+const initialBlogData = (section: number) => ({
+    id: crypto.randomUUID(),
+    section: `Section ${section}`,
+    subtitle: "",
+    content: "",
+    image: null
+})
 
 const storySectionSchema = z.object({
     section: z.string().trim().min(1, "Section cannot be empty"),
@@ -61,7 +67,7 @@ export function CreateBlogForm() {
 
     const addStorySection = (section: number) => {
         return setStorySections(prev => [...prev, initialBlogData(section)])
-    }
+    };
 
     const handleBlogSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -78,6 +84,7 @@ export function CreateBlogForm() {
 
             // blog data
             const blogFormData = new FormData();
+            const sectionsWithImages: string[] = [];
 
             blogFormData.append('blog',
                 JSON.stringify({
@@ -85,6 +92,7 @@ export function CreateBlogForm() {
                     intro,
                     conclusion,
                     sections: storySections.map(section => ({
+                        id: section.id,
                         section: section.section,
                         subtitle: section.subtitle,
                         content: section.content
@@ -93,13 +101,18 @@ export function CreateBlogForm() {
             );
 
             // section images
-
             storySections.forEach((section, index) => {
-                blogFormData.append('sectionImages', section.image as File);
+                if (section.image && section.image.size > 0) {
+                    sectionsWithImages.push(section.id);
+                    blogFormData.append('sectionImages', section.image as File);
+                }
             })
 
             // blog image
-            blogFormData.append('blogImage', blogImage as File);
+            blogImage && blogImage.size > 0 && blogFormData.append('blogImage', blogImage as File);
+
+            // sections with images
+            blogFormData.append('sectionsWithImages', JSON.stringify({sectionsWithImages}));
 
             const res = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/blogs`, {
                 method: 'POST',
@@ -147,7 +160,7 @@ export function CreateBlogForm() {
             </Field>
             <Field>
                 <FieldLabel htmlFor="blogImage">Blog Image</FieldLabel>
-                <Input type="file" id="blogImage" onChange={(e) => setBlogImage(e.target.files ? e.target.files[0] : null)} required />
+                <Input accept="image/png, image/gif, image/jpeg" type="file" id="blogImage" onChange={(e) => setBlogImage(e.target.files ? e.target.files[0] : null)} required />
                 {errors.properties?.blogImage?.errors?.length && <ul className="list-disc pl-4">{errors.properties.blogImage.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
             </Field>
             <FieldError>{generalError}</FieldError>
@@ -187,7 +200,7 @@ export function CreateBlogForm() {
 
                         <Field>
                             <FieldLabel htmlFor={`image-${index}`}>Image</FieldLabel>
-                            <Input type="file" id={`image-${index}`} onChange={(e) => {
+                            <Input accept="image/png, image/gif, image/jpeg" type="file" id={`image-${index}`} onChange={(e) => {
                                 const newSections = [...storySections];
                                 newSections[index].image = e.target.files ? e.target.files[0] : null;
                                 setStorySections(newSections);

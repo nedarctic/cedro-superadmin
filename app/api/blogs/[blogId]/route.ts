@@ -13,11 +13,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ bl
 
         const formData = await req.formData();
 
-        const res = await fetch(`${process.env.NEST_API_URL}/blogs`, {
-            method: 'POST',
+        const res = await fetch(`${process.env.NEST_API_URL}/blogs/${blogId}`, {
+            method: 'PATCH',
             headers: {
                 Authorization: `Bearer ${accessToken}`,
-            }
+            },
+            body: formData
         });
 
         if (!res.ok) {

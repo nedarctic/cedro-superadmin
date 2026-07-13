@@ -72,7 +72,7 @@ export default function UpdateTourForm({tour}: {tour: Tour}) {
   const [groupSize, setGroupSize] = useState<string>(tour.groupSize);
   const [price, setPrice] = useState<string>(tour.price);
   const [tourImage, setTourImage] = useState<File | null>(null);
-  // TO CONTINUE...
+  
   const [itineraries, setItineraries] = useState<Itinerary[]>(initialItineraryData(1));
   const [duration, setDuration] = useState<string>('');
 

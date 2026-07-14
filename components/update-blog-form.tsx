@@ -87,7 +87,7 @@ export function UpdateBlogForm({ blog }: { blog: Blog }) {
                 sectionImageUrl,
                 sectionImageKey,
                 sectionImage
-            }) => {
+            }, index) => {
 
                 if (sectionImage && sectionImage.size > 0) {
                     formData.append('sectionImages', sectionImage);
@@ -96,7 +96,7 @@ export function UpdateBlogForm({ blog }: { blog: Blog }) {
 
                 return {
                     id,
-                    section,
+                    section: `Section ${index + 1}`,
                     subtitle,
                     content,
                     sectionImageUrl,
@@ -274,7 +274,6 @@ export function UpdateBlogForm({ blog }: { blog: Blog }) {
                 type="button"
                 onClick={() => {
                     setSections(prev => [...prev, {
-                        section: `Section ${prev.length + 1}`,
                         id: crypto.randomUUID(),
                         content: '',
                         subtitle: '',

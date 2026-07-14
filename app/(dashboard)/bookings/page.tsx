@@ -23,7 +23,7 @@ export default async function BookingsPage(
     const { bookings, meta } = data;
 
     error && console.log('An error occurred fetching bookings', error);
-    success && console.log('Successfully fetched bookings', bookings);
+    success && console.log('Successfully fetched bookings');
 
     const headers = [
         { label: 'Name', key: 'name' },

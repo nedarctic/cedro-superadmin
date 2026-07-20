@@ -27,7 +27,8 @@ export function CreateMemberForm() {
 
     const [name, setName] = useState<string>('');
     const [designation, setDesignation] = useState<string>('');
-    const [description, setDescription] = useState<string>('')
+    const [description, setDescription] = useState<string>('');
+    const [level, setLevel] = useState<string>('');
     const [memberImage, setMemberImage] = useState<File | null>(null);
 
     const [errors, setErrors] = useState<any>(null);
@@ -60,18 +61,26 @@ export function CreateMemberForm() {
             memberFormData.append('designation', designation);
             memberFormData.append('description', description);
             memberFormData.append('memberImage', memberImage as File);
+            memberFormData.append('level', level);
 
-            const res = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/team`, {
+            for(const [key, value] of memberFormData.entries()){
+                console.log("Key:", key, "Value", value);
+            }
+
+            const res = await fetch(`/api/team`, {
                 method: 'POST',
                 body: memberFormData
             });
 
-            if (!res.ok) {
-                const error = res.text();
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                
                 toast.error('An error occurred adding new team member', {
-                    description: error
-                })
-                setGeneralError(error);
+                    description: data.error
+                });
+                console.log("An error occurred creating new team member", data.error)
+                setGeneralError(data.error);
                 setLoading(false);
                 return;
             }
@@ -79,7 +88,7 @@ export function CreateMemberForm() {
             toast.success('Successfully addedd new team member')
             setErrors({})
             setLoading(false);
-            router.push('/team')
+            // router.push('/team')
 
         } catch (error) {
             setGeneralError(String(error));
@@ -109,13 +118,23 @@ export function CreateMemberForm() {
             </Field>
 
             <Field>
+                <FieldLabel htmlFor='level'>Level</FieldLabel>
+                <Input placeholder="Level"
+                    id='level'
+                    type="number"
+                    value={level}
+                    onChange={(e) => setLevel(e.target.value)} />
+                {errors?.properties?.level?.errors?.length && <ul className="list-disc pl-4">{errors.properties.level.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
+            </Field>
+
+            <Field>
                 <FieldLabel htmlFor='description'>Description</FieldLabel>
                 <Textarea placeholder="Description"
                     id='description'
                     value={description}
                     onChange={(e) => setDescription(e.target.value)} />
                 {errors?.properties?.description?.errors?.length && <ul className="list-disc pl-4">{errors.properties.description.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
-            </Field>
+            </Field>            
 
             <Field>
                 <FieldLabel htmlFor='memberImage'>Select member image</FieldLabel>

@@ -1,33 +1,21 @@
 import { BookingDataChart } from "@/components/booking-chart";
 import { BreadCrumb } from "@/components/breadcrumb";
 import { KPICard } from "@/components/kpi-card";
-import { getBookingChartData, getDashKpis } from "@/lib/helpers/dash.helpers";
+import { buildBookingChartData, getBookingChartData, getDashKpis } from "@/lib/helpers/dash.helpers";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 
 export default async function Page() {
-  const monthlyBookings = {
-    February: 0,
-    March: 0,
-    April: 0,
-    May: 0,
-    June: 0,
-    July: 2,
-  }
-
   const session = await getServerSession(authOptions);
   if (!session) {
     redirect('/login')
   }
   const { accessToken } = session;
 
-  const { data, success, error } = await getDashKpis(accessToken);
+  const { data } = await getDashKpis(accessToken);
   const { data: bookingData } = await getBookingChartData(accessToken);
-
-  console.log("Booking chart data:", bookingData);
-
-  console.log(data)
+  const monthlyBookings = buildBookingChartData(bookingData, data?.pastSixMonthsBookings);
 
   return (
     <div className="flex flex-col py-6 ml-4 mr-6 gap-6 h-full">

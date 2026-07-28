@@ -110,7 +110,9 @@ export function BookingDataChart({ data }: BookingDataChartProps) {
           {percentageChange >= 0 ? "Trending up" : "Trending down"} by {Math.abs(percentageChange).toFixed(1)}% this month <TrendingUp className="h-4 w-4" />
         </div>
         <div className="leading-none text-muted-foreground">
-          Showing booking totals for the selected months
+          {totalBookings > 0
+            ? `Showing ${totalBookings} total booking${totalBookings === 1 ? "" : "s"} across the selected months`
+            : "Showing booking totals for the selected months"}
         </div>
       </CardFooter>
     </Card>

@@ -1,5 +1,38 @@
 import { Booking } from "../types/booking";
 
+type BookingChartPoint = {
+    createdAt?: string | null;
+};
+
+export function buildBookingChartData(
+    bookingData?: BookingChartPoint[] | null,
+    fallbackData?: Record<string, number> | null,
+): Record<string, number> {
+    if (fallbackData && Object.keys(fallbackData).length > 0) {
+        return fallbackData;
+    }
+
+    if (!bookingData?.length) {
+        return {};
+    }
+
+    return bookingData.reduce<Record<string, number>>((acc, booking) => {
+        if (!booking.createdAt) {
+            return acc;
+        }
+
+        const parsedDate = new Date(booking.createdAt);
+        if (Number.isNaN(parsedDate.getTime())) {
+            return acc;
+        }
+
+        const month = parsedDate.toLocaleString("en-US", { month: "long" });
+        acc[month] = (acc[month] ?? 0) + 1;
+
+        return acc;
+    }, {});
+}
+
 export async function getDashKpis(accessToken: string): Promise<{
     success: boolean;
     data?: {
@@ -9,7 +42,7 @@ export async function getDashKpis(accessToken: string): Promise<{
         totalMembers: number
         totalTours: number;
         recentBookings: Booking[];
-        pastSixMonthsBookings: Promise<Record<string, number>>;
+        pastSixMonthsBookings?: Record<string, number>;
     },
     error?: string;
 }> {

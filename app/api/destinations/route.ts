@@ -11,17 +11,19 @@ export async function POST(req: NextRequest) {
         }
 
         const { accessToken } = session;
-        console.log('token at destinations api route handler', accessToken)
 
-        const body = await req.json();
+        const formData = await req.formData();
+
+        for(const [key, value] of formData.entries()){
+            console.log("key", key, "value", value)
+        }
 
         const res = await fetch(`${process.env.NEST_API_URL}/destinations`, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
             },
-            body: JSON.stringify(body),
+            body: formData,
         });
 
         if (!res.ok) {

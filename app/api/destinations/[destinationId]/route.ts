@@ -12,31 +12,32 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ de
         const { accessToken } = session;
         const { destinationId } = await params;
 
-        const body = await req.json();
+        const formData = await req.formData();
 
         const res = await fetch(`${process.env.NEST_API_URL}/destinations/${destinationId}`, {
             method: 'PATCH',
             headers: {
                 Authorization: `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
             },
-            body: JSON.stringify(body)
+            body: formData
         });
 
+         const { data, success, error } = await res.json();
+
         if (!res.ok) {
-            const errorMessage = await res.json();
             return NextResponse.json({
                 success: false,
-                error: errorMessage.error.message,
+                error: error || "Backend request error",
             }, { status: res.status });
         };
 
-        const { data, success } = await res.json();
+       
 
         return NextResponse.json({
             success,
             data
-        })
+        });
+        
     } catch (error) {
         return NextResponse.json({
             success: false,

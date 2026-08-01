@@ -1,7 +1,7 @@
 import { Destination } from "../types/destination";
 
 // get destination
-export async function getDestinations(): Promise<{
+export async function getDestinations(url: string): Promise<{
     data?: {
         destinations: Destination[],
         meta: {
@@ -15,7 +15,7 @@ export async function getDestinations(): Promise<{
     error?: string;
 }> {
     try {
-        const res = await fetch(`${process.env.NEST_API_URL}/destinations`, {
+        const res = await fetch(url, {
             method: 'GET',
         });
 
@@ -42,9 +42,13 @@ export async function getDestinations(): Promise<{
 }
 
 // get destination
-export async function getDestination (destinationId: string) {
+export async function getDestination (destinationId: string): Promise<{
+    success: boolean;
+    data?: Destination;
+    error?: string;
+}> {
     try {
-        const res = await fetch(`${process.env.NEST_API_URL}/blog/${destinationId}`, {
+        const res = await fetch(`${process.env.NEST_API_URL}/destinations/${destinationId}`, {
             method: 'GET'
         });
 
@@ -57,6 +61,9 @@ export async function getDestination (destinationId: string) {
         }
 
         const { success, data } = await res.json();
+
+        console.log("backend res for destination", res);
+        console.log("json data", data, "success", success);
         
         return {
             success,

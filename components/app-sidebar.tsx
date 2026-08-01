@@ -13,12 +13,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from "@/components/ui/sidebar"
-import { CalendarCheckIcon, FileTextIcon, LayoutDashboardIcon, MapIcon, UsersIcon } from "lucide-react"
+import { CalendarCheckIcon, FileTextIcon, LayoutDashboardIcon, MapIcon, PlaneIcon, UsersIcon } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
 const data = {
-  
+
 
   navMain: [
     {
@@ -28,6 +28,14 @@ const data = {
         <LayoutDashboardIcon
         />
       ),
+    },
+    {
+      title: "Destinations",
+      url: "/destinations",
+      icon: (
+        <PlaneIcon
+        />
+      )
     },
     {
       title: "Tours",
@@ -50,7 +58,7 @@ const data = {
       url: "/team",
       icon: (
         <UsersIcon
-        />        
+        />
       ),
     },
     {
@@ -64,7 +72,7 @@ const data = {
   ],
 }
 
-export function AppSidebar({ user, ...props }: {user: {name: string; email: string; avatar: string;}} & React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ user, ...props }: { user: { name: string; email: string; avatar: string; } } & React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar variant="floating" collapsible="icon" {...props}>
       <SidebarHeader>
@@ -75,7 +83,7 @@ export function AppSidebar({ user, ...props }: {user: {name: string; email: stri
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <Link href="/">
-              <Image src="/cedro-cheetah.svg" width={20} height={20} alt="Cedro Adventures cheetah mascot" />
+                <Image src="/cedro-cheetah.svg" width={20} height={20} alt="Cedro Adventures cheetah mascot" />
                 <span className="text-base font-semibold">Cedro Management</span>
               </Link>
             </SidebarMenuButton>

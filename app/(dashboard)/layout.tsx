@@ -35,7 +35,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 }
             >
                 <AppSidebar user={loggedInUser} />
-                <div className="w-full my-2">
+                <div className="w-full py-6 px-4">
                     {children}
                 </div>
             </SidebarProvider>

@@ -29,7 +29,7 @@ export default function AddDestinationPage() {
     const router = useRouter();
 
     const [name, setName] = useState<string>("");
-    const [guides, setGuides] = useState<{ subtitle: string; content: string }[]>([{
+    const [guides, setGuides] = useState<{ subtitle: string; content: string; position: number }[]>([{
         subtitle: "",
         content: ""
     }]);
@@ -56,10 +56,13 @@ export default function AddDestinationPage() {
                 return;
             }
 
+            const guidesData = guides.map((guide, index) => ({...guide, position: (index + 1)}))
+            guidesData.map(guide => console.log("guide", guide));
+
             const formData = new FormData();
             formData.append("name", name);
-            destinationImage && formData.append("destinationImage", destinationImage);
-            formData.append("guides", JSON.stringify({ guides }));
+            destinationImage && formData.append("image", destinationImage);
+            formData.append("guides", JSON.stringify({ guides: guidesData }));
 
             const url = "/api/destinations";
 
@@ -67,6 +70,13 @@ export default function AddDestinationPage() {
                 method: "POST",
                 body: formData
             });
+
+            console.log("create destination res", res);
+
+            console.log("formdata");
+            for(const [key, value] of formData.entries()){
+                console.log("key", key, "value", value);
+            }
 
             const { data, error, success } = await res.json();
 

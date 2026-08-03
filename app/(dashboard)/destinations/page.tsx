@@ -13,6 +13,7 @@ export default async function DestinationsPage({ searchParams }: {
         limit?: string;
     }>
 }) {
+
     const {
         limit = "10",
         page = "1",
@@ -27,7 +28,15 @@ export default async function DestinationsPage({ searchParams }: {
     const url = `${process.env.NEST_API_URL}/destinations?${params.toString()}`;
 
     const { data, success, error } = await getDestinations(url);
-    const { destinations, meta } = data!;
+    
+    if(!success){
+        return <div className="flex flex-col gap-6 pl-4 pr-6 py-6">
+            <BreadCrumb currentPage={"Destinations"} />
+            <p>Failed to get destinations. Please refresh the page or try again later.</p>
+        </div>
+    }
+
+    const { destinations, meta } = data;
 
     const headers = [
         { label: "Name", key: "name" },

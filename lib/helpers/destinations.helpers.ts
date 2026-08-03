@@ -27,11 +27,11 @@ export async function getDestinations(url: string): Promise<{
             }
         }
 
-        const { data, success } = await res.json();
-
+        const data = await res.json();
+        
         return {
             data,
-            success,
+            success: true,
         }
     } catch (error) {
         return {
@@ -60,13 +60,11 @@ export async function getDestination (destinationId: string): Promise<{
             }
         }
 
-        const { success, data } = await res.json();
-
-        console.log("backend res for destination", res);
-        console.log("json data", data, "success", success);
+        const data = await res.json();
+        console.log("destination data at helper", data);
         
         return {
-            success,
+            success: true,
             data
         }
     } catch (error) {

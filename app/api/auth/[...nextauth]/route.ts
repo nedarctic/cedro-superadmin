@@ -14,26 +14,23 @@ async function refreshToken(refreshAccessToken: string, oldToken: any) {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ refreshToken: refreshAccessToken })
+        body: JSON.stringify({ refresh_token: refreshAccessToken })
     });
 
     if (!res.ok) {
         return null;
     }
 
-    const { data, success } = await res.json();
+    const data = await res.json();
+    console.log("json data from backend", data);
 
-    if (!success) {
-        return null;
-    }
-
-    const { refreshToken, accessToken } = data;
-    const expiresAt = decodeExp(accessToken);
+    const { refresh_token, access_token } = data;
+    const expiresAt = decodeExp(access_token);
 
     return {
         ...oldToken,
-        refreshToken,
-        accessToken,
+        refreshToken: refresh_token,
+        accessToken: access_token,
         expiresAt
     }
 }
@@ -54,21 +51,16 @@ export const authOptions: AuthOptions = {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ email: credentials?.email, password: credentials?.password }),
-                })
+                });
 
                 if (!res.ok) {
                     return null;
                 }
 
-                const { data, success } = await res.json();
+                const data = await res.json();
 
-                if (!success) {
-                    return null;
-                };
-
-                const { user, accessToken, refreshToken } = data;
-
-                const expiresAt = decodeExp(accessToken);
+                const { user, access_token, refresh_token } = data;
+                const expiresAt = decodeExp(access_token);
 
                 if (isNaN(expiresAt)) throw new Error('Invalid expiration on token');
 
@@ -77,8 +69,8 @@ export const authOptions: AuthOptions = {
                     name: user.name,
                     email: user.email,
                     role: user.role,
-                    accessToken,
-                    refreshToken,
+                    accessToken: access_token,
+                    refreshToken: refresh_token,
                     expiresAt
                 }
             }

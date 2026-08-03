@@ -13,9 +13,9 @@ export default async function DestinationDetailPage({ params }: { params: Promis
         { label: "Destinations", link: "/destinations" }
     ];
 
-    const { success, data, error } = await getDestination(destinationId);
+    const {success, data} = await getDestination(destinationId);
 
-    if (!success) {
+    if (!data) {
         return <div className="flex flex-col min-h-screen gap-6">
             <BreadCrumb currentPage="Destination Details" crumbs={crumbs} />
             <p className="text-md">Failed to fetch destination details. Please refresh the page or try again later.</p>
@@ -38,7 +38,7 @@ export default async function DestinationDetailPage({ params }: { params: Promis
                 unoptimized
                 fill
                 className="object-cover object-top rounded-2xl"
-                src={data?.destinationImageUrl!}
+                src={data?.destinationImage}
                 alt={data?.name!}
             />
         </div>

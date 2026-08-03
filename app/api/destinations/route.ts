@@ -4,6 +4,7 @@ import { authOptions } from "../auth/[...nextauth]/route";
 
 export async function POST(req: NextRequest) {
     try {
+        console.log("Running the route handler");
         const session = await getServerSession(authOptions);
 
         if (!session) {
@@ -30,14 +31,14 @@ export async function POST(req: NextRequest) {
             const errorMessage = await res.json();
             return NextResponse.json({
                 success: false,
-                error: errorMessage.error.message,
+                error: errorMessage.message,
             })
         }
 
-        const { data, success } = await res.json();
+        const data = await res.json();
 
         return NextResponse.json({
-            success,
+            success: true,
             data
         })
 

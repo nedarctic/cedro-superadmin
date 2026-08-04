@@ -4,10 +4,10 @@ import { getDestination } from "@/lib/helpers/destinations.helpers";
 import { PenIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { DeleteDestinationDialog } from "@/components/delete-destination-dialog";
 
 export default async function DestinationDetailPage({ params }: { params: Promise<{ destinationId: string }> }) {
     const { destinationId } = await params;
-    console.log("destination id", destinationId);
 
     const crumbs = [
         { label: "Destinations", link: "/destinations" }
@@ -29,7 +29,10 @@ export default async function DestinationDetailPage({ params }: { params: Promis
 
         <div className="flex flex-row justify-between">
             <h1 className="font-semibold text-lg">Destination details</h1>
-            <Link href={`/destinations/${destinationId}/edit-destination`} className="flex flex-row items-center gap-2"><PenIcon size={16} />Edit destination</Link>
+            <div className="flex flex-row gap-3 items-center">
+                <DeleteDestinationDialog destinationId={destinationId} />
+                <Link href={`/destinations/${destinationId}/edit-destination`} className="flex flex-row items-center gap-2"><PenIcon size={16} />Edit destination</Link>
+            </div>            
         </div>
 
         <h1 className="text-lg font-bold">{data?.name}</h1>
@@ -43,8 +46,8 @@ export default async function DestinationDetailPage({ params }: { params: Promis
             />
         </div>
 
-        {data?.destinationGuides ? <ul className="list-none">
-            {data.destinationGuides.map((guide, index) => <li key={index}>
+        {data?.guide ? <ul className="list-none">
+            {data.guide.map((guide, index) => <li key={index}>
                 <h2 className="text-md font-semibold">{guide.subtitle}</h2>
                 <p className="text-md">{guide.subtitle}</p>
             </li>)} </ul> :

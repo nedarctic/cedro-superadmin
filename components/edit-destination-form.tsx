@@ -38,7 +38,7 @@ export function EditDestinationForm({ destination }: { destination: Destination 
         id: string;
         subtitle: string;
         content: string;
-    }[]>(destination.destinationGuides && destination.destinationGuides.length ? destination.destinationGuides : [{
+    }[]>(destination.guide && destination.guide.length ? destination.guide : [{
         id: uuidGen(),
         subtitle: "",
         content: ""

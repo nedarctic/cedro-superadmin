@@ -7,7 +7,7 @@ export async function getTeam (options: {
     search?: string
 }): Promise<{
     data?: {
-        team: TeamMember[],
+        members: TeamMember[],
         meta: {
             page: number;
             limit: number;
@@ -41,10 +41,10 @@ export async function getTeam (options: {
             }
         }
 
-        const { data, success } = await res.json();
+        const data = await res.json();
 
         return {
-            success,
+            success: true,
             data
         }
 

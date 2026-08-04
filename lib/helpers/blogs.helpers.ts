@@ -39,10 +39,10 @@ export async function getBlogs(options: {
             }
         }
 
-        const { data, success } = await res.json();
+        const data = await res.json();
 
         return {
-            success,
+            success: true,
             data
         }
 

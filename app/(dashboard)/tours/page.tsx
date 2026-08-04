@@ -34,8 +34,8 @@ export default async function ToursPage({ searchParams }: {
             </div>
             <SearchInput placeholder="Search tours..." />
             <div className="flex flex-col justify-between min-h-4/5 gap-6">
-                {tours.length ? <TableData path="/tours" headers={headers} data={tours} /> : <p className="text-sm font-medium">No tours at the moment.</p>}
-                {tours.length ? <PaginationComponent meta={meta} /> : ''}
+                {tours?.length ? <TableData path="/tours" headers={headers} data={tours} /> : <p className="text-sm font-medium">No tours at the moment.</p>}
+                {tours?.length ? <PaginationComponent meta={meta} /> : ''}
             </div>
         </div>
     )

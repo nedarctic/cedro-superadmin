@@ -2,7 +2,7 @@ import { Destination } from "../types/destination";
 
 // get destination
 export async function getDestinations(url: string): Promise<{
-    data?: {
+    data?: Destination[] | {
         destinations: Destination[],
         meta: {
             page: number;
@@ -61,7 +61,6 @@ export async function getDestination (destinationId: string): Promise<{
         }
 
         const data = await res.json();
-        console.log("destination data at helper", data);
         
         return {
             success: true,

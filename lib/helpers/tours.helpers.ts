@@ -31,7 +31,7 @@ export async function getTours(options: {
         limit && params.set('limit', limit);
         search && params.set('search', search);
 
-        const url = new URL(`${process.env.NEST_API_URL}/tours?${params.toString()}`)
+        const url = new URL(`${process.env.NEST_API_URL}/tours/paginated-tours?${params.toString()}`)
 
         const res = await fetch(url, {
             method: 'GET'
@@ -46,6 +46,7 @@ export async function getTours(options: {
         }
 
         const data = await res.json();
+        console.log("tours data", data);
 
         return {
             success: true,

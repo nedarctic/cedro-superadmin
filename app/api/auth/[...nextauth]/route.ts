@@ -22,7 +22,6 @@ async function refreshToken(refreshAccessToken: string, oldToken: any) {
     }
 
     const data = await res.json();
-    console.log("json data from backend", data);
 
     const { refresh_token, access_token } = data;
     const expiresAt = decodeExp(access_token);

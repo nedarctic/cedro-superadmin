@@ -46,7 +46,6 @@ export async function getTours(options: {
         }
 
         const data = await res.json();
-        console.log("tours data", data);
 
         return {
             success: true,

@@ -15,7 +15,8 @@ export default async function Page() {
 
   const { data } = await getDashKpis(accessToken);
   const { data: bookingData } = await getBookingChartData(accessToken);
-  const monthlyBookings = buildBookingChartData(bookingData, data?.pastSixMonthsBookings);
+
+  const monthlyBookings = buildBookingChartData(bookingData, data?.past6MonthsBookings);
 
   return (
     <div className="flex flex-col py-6 ml-4 mr-6 gap-6 h-full">

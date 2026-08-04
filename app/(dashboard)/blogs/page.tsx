@@ -7,9 +7,14 @@ import Link from "next/link";
 import { getBlogs } from "@/lib/helpers/blogs.helpers";
 import { CreateAssetBtn } from "@/components/create-asset-btn";
 
-export default async function BlogsPage() {
+export default async function BlogsPage({searchParams}: {searchParams: Promise<{
+    page?: string;
+    limit?: string;
+    search?: string;
+}>}) {
 
-    const { success, data, error } = await getBlogs({});
+    const { limit = "10", page = "1", search } = await searchParams;
+    const { success, data, error } = await getBlogs({ limit, page, search });
 
     !success && console.log('An error occurred', error);
 
@@ -28,7 +33,7 @@ export default async function BlogsPage() {
             </div>
             <SearchInput placeholder="Search blogs..." />
             <div className="flex flex-col justify-between min-h-4/5">
-                {blogs.length ? <TableData path="/blogs" headers={headers} data={blogs} /> : <p className="text-sm font-medium">No tours at the moment.</p>}
+                {blogs.length ? <TableData path="/blogs" headers={headers} data={blogs} /> : <p className="text-sm font-medium">No blogs at the moment.</p>}
                 {blogs.length ? <PaginationComponent meta={meta} /> : ''}
             </div>
         </div>

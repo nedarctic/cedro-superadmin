@@ -5,8 +5,8 @@ export type Itinerary = {
     activities: string[];
     subtitle: string;
     day: string;
-    itineraryImageKey: string;
-    itineraryImageUrl: string;
+    imageKey: string;
+    dayImage: string;
     createdAt: string;
     updatedAt: string;
     tour: Tour;

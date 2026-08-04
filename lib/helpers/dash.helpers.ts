@@ -42,7 +42,7 @@ export async function getDashKpis(accessToken: string): Promise<{
         totalMembers: number
         totalTours: number;
         recentBookings: Booking[];
-        pastSixMonthsBookings?: Record<string, number>;
+        past6MonthsBookings?: Record<string, number>;
     },
     error?: string;
 }> {
@@ -55,17 +55,17 @@ export async function getDashKpis(accessToken: string): Promise<{
             }
         });
 
-        const { data, success, error } = await res.json();
+        const data = await res.json();
 
         if (!res.ok) {
             return {
                 success: false,
-                error: error.message || "Backend request error"
+                error: data || "Backend request error"
             }
         };
 
         return {
-            success,
+            success: true,
             data
         }
 

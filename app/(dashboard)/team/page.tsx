@@ -21,7 +21,7 @@ export default async function TeamPage({ searchParams }: {
 
     !success && console.log('An error occurred fetching team', error);
 
-    const { meta, team } = data!
+    const { meta, members: team } = data!
 
     return (
         <div className="flex flex-col py-6 ml-4 mr-6 gap-6 h-full">

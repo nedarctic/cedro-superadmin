@@ -12,11 +12,11 @@ export type Tour = {
     destination: Destination;
     dates: string;
     duration: string;
-    tourImageKey: string;
-    tourImageUrl: string;
-    groupSize: string;
-    price: string;
-    itineraries: Itinerary[];
+    imageKey: string;
+    tourImage: string;
+    groupSize: number;
+    price: number;
+    itinerary: Itinerary[];
     destinationId: string;
     totalBookings?: string;
     bookings?: Booking[];

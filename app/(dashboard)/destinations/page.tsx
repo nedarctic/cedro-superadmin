@@ -29,7 +29,7 @@ export default async function DestinationsPage({ searchParams }: {
 
     const { data, success, error } = await getDestinations(url);
     
-    if(!success){
+    if(!success || !data || !("destinations" in data)){
         return <div className="flex flex-col gap-6 pl-4 pr-6 py-6">
             <BreadCrumb currentPage={"Destinations"} />
             <p>Failed to get destinations. Please refresh the page or try again later.</p>

@@ -1,12 +1,12 @@
-import { BreadCrumb } from "@/components/breadcrumb"
-import { EditDestinationForm } from "@/components/edit-destination-form";
-import { getDestination } from "@/lib/helpers/destinations.helpers";
+import {getDestination} from "@/lib/helpers/destinations.helpers";
+import {BreadCrumb} from "@/components/breadcrumb";
+import {EditDestinationForm} from "@/components/edit-destination-form";
 
-export default async function EditDestinationPage({ params }: { params: Promise<{ destinationId: string }> }) {
-
-    const { destinationId } = await params;
-    const { success, data, error } = await getDestination(destinationId);
-
+export default async function EditDestinationPage ({params}: {params: Promise<{destinationId: string}>}) {
+    
+    const {destinationId} = await params;
+    const {success, data, error } = await getDestination(destinationId);
+   
     const crumbs = [
         { label: "Destinations", link: "/destinations" },
         { label: "Destination Details", link: `/destinations/${destinationId}` }
@@ -20,7 +20,6 @@ export default async function EditDestinationPage({ params }: { params: Promise<
         </div>
     }
 
-    console.log("destination details in edit destination page", data);
     return <div className="flex flex-col gap-6 min-h-screen w-full">
         <BreadCrumb currentPage="Edit Destination" crumbs={crumbs} />
 

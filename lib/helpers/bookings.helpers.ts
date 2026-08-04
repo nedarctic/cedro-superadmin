@@ -1,6 +1,6 @@
 import { Booking } from "../types/booking";
 
-export async function getBookings(options: {
+export async function getBookings(accessToken: string, options: {
     page?: string,
     limit?: string,
     search?: string
@@ -22,6 +22,9 @@ export async function getBookings(options: {
 
         const res = await fetch(url, {
             method: 'GET',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            }
         });
 
         if (!res.ok) {
@@ -32,10 +35,11 @@ export async function getBookings(options: {
             }
         }
 
-        const { data, success } = await res.json();
+        const data = await res.json();
+        console.log('Bookings data at helper:', data);
 
         return {
-            success,
+            success: true,
             data
         }
     } catch (error) {

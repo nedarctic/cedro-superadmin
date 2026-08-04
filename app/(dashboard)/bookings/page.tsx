@@ -6,6 +6,9 @@ import { getBookings } from "@/lib/helpers/bookings.helpers";
 import Link from "next/link";
 import { PlusIcon } from "lucide-react";
 import { CreateAssetBtn } from "@/components/create-asset-btn";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 
 export default async function BookingsPage(
     { searchParams }: {
@@ -17,9 +20,16 @@ export default async function BookingsPage(
     }
 ) {
 
-    const { limit = "10", page, search } = await searchParams;
-    const { success, data, error } = await getBookings({ page, limit, search });
+    const session = await getServerSession(authOptions);
+    if(!session || !session.user || !session.accessToken) {
+        redirect('/login');
+    }
+    const {accessToken} = session;
 
+    const { limit = "10", page, search } = await searchParams;
+    const { success, data, error } = await getBookings(accessToken, { page, limit, search });
+
+    console.log('Bookings data:', data);
     const { bookings, meta } = data;
 
     error && console.log('An error occurred fetching bookings', error);

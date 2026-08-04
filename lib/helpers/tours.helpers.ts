@@ -38,17 +38,17 @@ export async function getTours(options: {
         });
 
         if (!res.ok) {
-            const error = (await res.json()).message;
+            const error = await res.json();
             return {
                 success: false,
                 error: error
             }
         }
 
-        const { data, success } = await res.json();
+        const data = await res.json();
 
         return {
-            success,
+            success: true,
             data
         }
     } catch (error) {
@@ -81,10 +81,10 @@ export async function getTour (tourId: string): Promise<{
             }
         }
 
-        const { success, data } = await res.json();
+        const data = await res.json();
         
         return {
-            success,
+            success: true,
             data
         }
     } catch (error) {

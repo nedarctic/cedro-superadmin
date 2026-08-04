@@ -60,13 +60,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ des
         const { accessToken } = session;
         const { destinationId } = await params;
 
-        console.log('access token at tour api creation handler', accessToken);
-
         const formData = await req.formData();
 
         const tourJsonData = formData.get('tour');
-        console.log('Tour JSON at API route handler', tourJsonData)
-
         if (typeof tourJsonData !== 'string') {
             return NextResponse.json({
                 success: false,
@@ -114,7 +110,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ des
             tourFormData.append('tourImage', tourImage);
         }
 
-        const res = await fetch(`${process.env.NEST_API_URL}/tours/${destinationId}`, {
+        const res = await fetch(`${process.env.NEST_API_URL}/tours/`, {
             method: 'POST',
             headers: {
                 Authorization: `Bearer ${accessToken}`

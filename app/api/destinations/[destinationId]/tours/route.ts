@@ -40,10 +40,13 @@ const tourValidationSchema = z.object({
     activities: z.array(z.string().min(1, "Activity item cannot be empty")),
     excluded: z.array(z.string().min(1, 'Excluded item cannot be empty')),
     included: z.array(z.string().min(1, 'Included item field cannot be empty')),
-    tourImage: z.instanceof(File)
-        .refine(file => file.size > 0, { message: "Tour image missing" })
-        .refine(file => ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG and PNG images allowed" })
-        .refine(file => file.size < 5 * 1024 * 1024, { message: "Maximum allowed file size is 5MB" })
+    tourImage: z.union([
+        z.instanceof(File)
+            .refine(file => file.size > 0, { message: "Tour image missing" })
+            .refine(file => ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG and PNG images allowed" })
+            .refine(file => file.size < 5 * 1024 * 1024, { message: "Maximum allowed file size is 5MB" }),
+        z.null()
+    ]).optional()
 });
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ destinationId: string }> }) {
@@ -83,7 +86,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ des
             activities: tourData.activities,
             excluded: tourData.excluded,
             included: tourData.included,
-            tourImage: formData.get('tourImage')
+            tourImage: formData.get('tourImage') ?? formData.get('image') ?? null
         })
 
         if (!parsedData.success) {
@@ -107,7 +110,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ des
             })
         )
 
-        tourFormData.append('tourImage', parsedData.data.tourImage);
+        if (tourImage instanceof File) {
+            tourFormData.append('tourImage', tourImage);
+        }
 
         const res = await fetch(`${process.env.NEST_API_URL}/tours/${destinationId}`, {
             method: 'POST',

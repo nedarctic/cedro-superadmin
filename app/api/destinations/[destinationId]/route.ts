@@ -22,19 +22,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ de
             body: formData
         });
 
-         const { data, success, error } = await res.json();
+         const data = await res.json();
 
         if (!res.ok) {
             return NextResponse.json({
                 success: false,
-                error: error || "Backend request error",
+                error: data || "Backend request error",
             }, { status: res.status });
         };
 
        
 
         return NextResponse.json({
-            success,
+            success: true,
             data
         });
         

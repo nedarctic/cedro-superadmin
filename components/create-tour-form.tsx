@@ -13,6 +13,14 @@ import z from "zod";
 import { CustomSpinner } from "./custom-spinner";
 import { Dialog, DialogContent } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
+import {
+  Select,
+  SelectTrigger,
+  SelectGroup,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select"
 
 type Itinerary = {
   activities: string[];
@@ -43,18 +51,16 @@ const tourCreationSchema = z.object({
   included: z.array(z.string().trim().min(1, "Included item cannot be empty")).min(1, "At least one included item is required"),
   excluded: z.array(z.string().trim().min(1, "Excluded item cannot be empty")).min(1, "At least one excluded item is required"),
   title: z.string().trim().min(1, "Title cannot be empty"),
-  destinationName: z.string().trim().min(1, "Destination name cannot be empty"),
+  destinationId: z.string().trim().min(1, "Destination name cannot be empty"),
   dates: z.string().trim().min(1, "Dates cannot be empty"),
   groupSize: z.string().trim().transform((val) => Number(val)).pipe(z.number().min(1, "Group size must be at least 1").max(100, "Group size cannot exceed 100")).transform((val) => val.toString()),
   price: z.string().trim().transform((val) => Number(val)).pipe(z.number().min(1, "Price must be at least 1")).transform((val) => val.toString()),
-  tourImage: z.instanceof(File, { message: "Please upload an image file" })
-    .refine(file => file.size <= 5 * 1024 * 1024, { message: "Image size must be less than 5MB" })
-    .refine(file => ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG, PNG, and GIF images are allowed" }),
+  // tourImage: z.instanceof(File, { message: "Please upload an image file" }),
   itineraries: z.array(itinerarySchema).min(1, "At least one itinerary is required"),
   duration: z.string().trim().min(1, "Duration cannot be empty")
 });
 
-export default function CreateTourForm() {
+export default function CreateTourForm({items}: {items: {label: string, value: string}[]}) {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
@@ -66,7 +72,7 @@ export default function CreateTourForm() {
   const [included, setIncluded] = useState<string[]>(['']);
   const [excluded, setExcluded] = useState<string[]>(['']);
   const [title, setTitle] = useState<string>('');
-  const [destinationName, setDestinationName] = useState<string>('');
+  const [destinationId, setDestinationId] = useState<string>('');
   const [dates, setDates] = useState<string>('');
   const [groupSize, setGroupSize] = useState<string>('');
   const [price, setPrice] = useState<string>('');
@@ -191,18 +197,18 @@ export default function CreateTourForm() {
         included,
         excluded,
         title,
-        destinationName,
+        destinationId,
         dates,
         groupSize,
         price,
-        tourImage,
+        // tourImage,
         itineraries,
         duration
       });
 
       if (!validationResult.success) {
-        setErrors(z.treeifyError(validationResult.error));
-        console.log("Validation errors:", z.treeifyError(validationResult.error));
+        setErrors(validationResult.error);
+        console.log("validation errors", validationResult.error.issues)
         setLoading(false);
         return;
       } else {
@@ -211,45 +217,10 @@ export default function CreateTourForm() {
 
       // create destination
 
-      setSteps(prev => ({ ...prev, destination: "Creating destination" }));
-
-      const destinationResult = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations`, {
-        method: 'POST',
-        body: JSON.stringify({ destinationName })
-      });
-
-      const {
-        data: destinationData,
-        success: destinationSuccess,
-        error: destinationError
-      } = await destinationResult.json();
-
-      if (!destinationSuccess) {
-        setLoading(false);
-        setError(destinationError);
-        toast.error('Error occurred creating destination');
-        console.log('Error creating destination:', destinationError);
-        return;
-      } else {
-        setSteps(prev => ({ ...prev, destination: "Destination created successfully ✅" }))
-        toast.success('Successfully created destination');
-      }
-
-      // create tour using destination id
-      setSteps(prev => ({ ...prev, tour: "Creating tour" }))
-      const { id: destinationId } = destinationData;
-
-      if (!destinationId) {
-        setError('Did not get destination ID');
-        toast.error('Missing destination ID', { description: "Did not get ID from the created destination" });
-        return;
-      } else {
-        console.log('Successfully retrieved destinationId', destinationId);
-        toast.success('Successfully retrieved destinationID', { description: destinationId });
-      }
-
       const tourFormData = new FormData();
-      tourImage && tourFormData.append('tourImage', tourImage);
+      if (tourImage instanceof File) {
+        tourFormData.append('tourImage', tourImage);
+      }
       tourFormData.append(
         'tour',
         JSON.stringify({
@@ -261,11 +232,12 @@ export default function CreateTourForm() {
           price,
           activities,
           excluded,
-          included
+          included,
+          destinationId
         })
       )
 
-      const url = new URL(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations/${destinationId}/tours`);
+      const url = `/api/destinations/${destinationId}/tours`;
       const tourResult = await fetch(url, {
         method: 'POST',
         body: tourFormData
@@ -348,7 +320,8 @@ export default function CreateTourForm() {
       );
       toast.error("Failed to create tour", {
         description: "Service temporarily unavailable."
-      })
+      });
+      console.log("error", error);
     } finally {
       setLoading(false);
     }
@@ -465,14 +438,26 @@ export default function CreateTourForm() {
         <FieldLabel>Title</FieldLabel>
         <Input name="title" placeholder="Title" required value={title} onChange={e => setTitle(e.currentTarget.value)} type="text" />
         {errors.properties?.title?.errors?.length && <ul className="list-disc pl-4">{errors.properties.title.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
-      </Field>
+      </Field>      
 
-      <Field >
-        <FieldLabel>Destination</FieldLabel>
-        <Input name="destination" placeholder="Destination" required value={destinationName}
-          onChange={e => setDestinationName(e.currentTarget.value)} type="text" />
-        {errors.properties?.destination?.errors?.length && <ul className="list-disc pl-4">{errors.properties.destination.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
-      </Field>
+      <Select
+        value={destinationId}
+        onValueChange={(value) => setDestinationId(value)}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Select a destination" />
+        </SelectTrigger>
+
+        <SelectContent>
+          <SelectGroup>
+            {items.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
 
       <Field >
         <FieldLabel>Duration</FieldLabel>
@@ -504,9 +489,9 @@ export default function CreateTourForm() {
 
       <Field >
         <FieldLabel>Add image</FieldLabel>
-        <Input name="tourImage" placeholder="Add tour image" required onChange={(e) => {
-          const file = e.currentTarget.files?.[0];
-          file && setTourImage(file)
+        <Input name="tourImage" placeholder="Add tour image" onChange={(e) => {
+          const file = e.currentTarget.files?.[0] ?? null;
+          setTourImage(file);
         }} type="file" accept="image/*" />
         {errors.properties?.tourImage?.errors?.length && <ul className="list-disc pl-4">{errors.properties.tourImage.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
       </Field>

@@ -55,12 +55,14 @@ const tourCreationSchema = z.object({
   dates: z.string().trim().min(1, "Dates cannot be empty"),
   groupSize: z.string().trim().transform((val) => Number(val)).pipe(z.number().min(1, "Group size must be at least 1").max(100, "Group size cannot exceed 100")).transform((val) => val.toString()),
   price: z.string().trim().transform((val) => Number(val)).pipe(z.number().min(1, "Price must be at least 1")).transform((val) => val.toString()),
-  // tourImage: z.instanceof(File, { message: "Please upload an image file" }),
+  tourImage: z.instanceof(File)
+    .refine(file => file.size <= 5 * 1024 * 1024, { message: "Image size must be less than 5MB" })
+    .refine(file => ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG, PNG, and GIF images are allowed" }),
   itineraries: z.array(itinerarySchema).min(1, "At least one itinerary is required"),
   duration: z.string().trim().min(1, "Duration cannot be empty")
 });
 
-export default function CreateTourForm({items}: {items: {label: string, value: string}[]}) {
+export default function CreateTourForm({ items }: { items: { label: string, value: string }[] }) {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
@@ -201,7 +203,7 @@ export default function CreateTourForm({items}: {items: {label: string, value: s
         dates,
         groupSize,
         price,
-        // tourImage,
+        tourImage,
         itineraries,
         duration
       });
@@ -215,113 +217,48 @@ export default function CreateTourForm({items}: {items: {label: string, value: s
         setErrors({});
       }
 
-      // create destination
-
-      const tourFormData = new FormData();
-      if (tourImage instanceof File) {
-        tourFormData.append('tourImage', tourImage);
-      }
-      tourFormData.append(
-        'tour',
-        JSON.stringify({
-          description,
-          duration,
-          title,
-          dates,
-          groupSize,
-          price,
-          activities,
-          excluded,
-          included,
-          destinationId
-        })
-      )
-
-      const url = `/api/destinations/${destinationId}/tours`;
-      const tourResult = await fetch(url, {
-        method: 'POST',
-        body: tourFormData
+      const formData = new FormData();
+      formData.append("tourImage", tourImage!);
+      itineraries.forEach((itinerary, index) => {
+        formData.append("itineraryImage", itinerary.itineraryImage!);
       })
+      formData.append("tour", JSON.stringify({
+        title,
+        intro: description,
+        activities,
+        included,
+        excluded,
+        destinationId,
+        dates,
+        groupSize: Number(groupSize),
+        price: Number(price),
+        duration,
+        itineraries: itineraries.map((itinerary, index) => ({
+          day: `Day ${index + 1}`,
+          subtitle: itinerary.subtitle,
+          activities: itinerary.activities
+        }))
+      }))
 
-      const {
-        data: tourData,
-        success: tourSuccess,
-        error: tourError
-      } = await tourResult.json();
+      const url = `/api/tours`;
+      const response = await fetch(url, {
+        method: "POST",
+        body: formData,
+      });
 
-      if (!tourSuccess) {
+      const { success, error, data } = await response.json();
+      if (!success) {
         setLoading(false);
-        setError(tourError);
-        toast.error('Error occurred creating tour.', { description: tourError })
-        console.log('Error creating tour', tourError);
+        toast.error("Failed to create tour.", { description: error || "An unknown error occurred." })
         return;
-      } else {
-        setSteps(prev => ({ ...prev, tour: "Tour created successfully ✅" }))
-        toast.success('Successfully created tour.')
       }
 
-      // create itineraries
-      setSteps(prev => ({ ...prev, itineraries: "Creating itineraries" }))
-      const { id: tourId } = tourData;
-
-      const itinerariesFormData = new FormData();
-
-      for (const itinerary of itineraries) {
-        if (itinerary.itineraryImage) {
-          itinerariesFormData.append(
-            "itineraryImages",
-            itinerary.itineraryImage
-          );
-        }
-      }
-
-      itinerariesFormData.append(
-        "itineraries",
-        JSON.stringify(
-          itineraries.map(
-            ({ subtitle, day, activities }) => ({
-              subtitle,
-              day,
-              activities,
-            })
-          )
-        )
-      );
-
-      const itineraryRes = await fetch(
-        `${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations/${destinationId}/tours/${tourId}/itineraries`,
-        {
-          method: "POST",
-          body: itinerariesFormData,
-        }
-      );
-
-      const { success: itinerarySuccess, error: itineraryError } = await itineraryRes.json();
-
-      if (!itinerarySuccess) {
-        setError(itineraryError);
-        toast.error('Error occurred creating itinerary');
-        return;
-      } else {
-        setSteps(prev => ({ ...prev, itineraries: 'Itineraries created successfully ✅' }))
-        setLoading(false);
-        toast.success("Itineraries successfully created", {
-          description: "New tour with destination and itineraries successfully created."
-        })
-      }
-
-      router.push('/tours');
+      setLoading(false);
+      toast.success("Tour created successfully!");
+      router.push(`/tours/${data.id}`);
 
     } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "An unexpected error occurred"
-      );
-      toast.error("Failed to create tour", {
-        description: "Service temporarily unavailable."
-      });
-      console.log("error", error);
+      toast.error("Failed to create tour.", { description: "Service temporarily unavailable. Please try again later." })
     } finally {
       setLoading(false);
     }
@@ -438,7 +375,7 @@ export default function CreateTourForm({items}: {items: {label: string, value: s
         <FieldLabel>Title</FieldLabel>
         <Input name="title" placeholder="Title" required value={title} onChange={e => setTitle(e.currentTarget.value)} type="text" />
         {errors.properties?.title?.errors?.length && <ul className="list-disc pl-4">{errors.properties.title.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
-      </Field>      
+      </Field>
 
       <Select
         value={destinationId}

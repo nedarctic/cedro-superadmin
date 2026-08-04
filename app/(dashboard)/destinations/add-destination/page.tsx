@@ -29,7 +29,7 @@ export default function AddDestinationPage() {
     const router = useRouter();
 
     const [name, setName] = useState<string>("");
-    const [guides, setGuides] = useState<{ subtitle: string; content: string; position: number }[]>([{
+    const [guides, setGuides] = useState<{ subtitle: string; content: string; position?: number }[]>([{
         subtitle: "",
         content: ""
     }]);

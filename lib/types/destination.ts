@@ -1,4 +1,4 @@
-import { DestinationGuide } from "./destination-guide";
+import { Guide } from "./guide";
 import { Tour } from "./tour";
 
 export type Destination = {
@@ -8,7 +8,7 @@ export type Destination = {
     tour?: Tour[];
     createdAt: string;
     updatedAt: string;
-    destinationGuides: DestinationGuide[];
-    destinationImageKey: string;
-    destinationImageUrl: string;
+    guide?: Guide[];
+    imageKey: string;
+    destinationImage: string;
 }

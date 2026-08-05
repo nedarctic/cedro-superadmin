@@ -220,8 +220,9 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
       const formData = new FormData();
       formData.append("tourImage", tourImage!);
       itineraries.forEach((itinerary, index) => {
-        formData.append("itineraryImage", itinerary.itineraryImage!);
-      })
+        itinerary.itineraryImage && itinerary.itineraryImage.size > 0 && formData.append("itineraryImage", itinerary.itineraryImage!);
+      });
+      
       formData.append("tour", JSON.stringify({
         title,
         intro: description,
@@ -235,7 +236,7 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
         duration,
         itineraries: itineraries.map((itinerary, index) => ({
           day: `Day ${index + 1}`,
-          subtitle: itinerary.subtitle,
+          title: itinerary.subtitle,
           activities: itinerary.activities
         }))
       }))

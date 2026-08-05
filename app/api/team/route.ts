@@ -12,8 +12,6 @@ export async function POST(req: NextRequest) {
 
         const { accessToken } = session;
 
-        console.log("access token at create member", accessToken)
-
         const formData = await req.formData();
 
         const res = await fetch(`${process.env.NEST_API_URL}/team`, {
@@ -24,25 +22,22 @@ export async function POST(req: NextRequest) {
             body: formData
         });
 
-        console.log("Create member response", res);
+        const data = await res.json();
 
-        const { data, success, error } = await res.json();
-
-        console.log("Create member response json:", data, "success:", success, "error:", error)
+        console.log("Create member response json:", data)
 
         if (!res.ok) {
-            const errorMessage = error;
-            console.log('error creating team member:', errorMessage);
+            console.log('error creating team member:', data);
             
             return NextResponse.json({
                 success: false,
-                error: errorMessage || 'An error occurred while adding the team member'
+                error: data || 'An error occurred while adding the team member'
             })
         }
 
         return NextResponse.json({
             data,
-            success
+            success: true
         })
 
     } catch (error) {

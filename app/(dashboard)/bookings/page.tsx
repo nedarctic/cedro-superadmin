@@ -38,7 +38,7 @@ export default async function BookingsPage(
     const headers = [
         { label: 'Name', key: 'name' },
         { label: 'Email', key: 'email' },
-        { label: 'Tour', key: 'tourTitle' },
+        { label: 'Tour', key: 'tourName' },
     ];
 
     return (

@@ -15,22 +15,22 @@ import { Destination } from "@/lib/types/destination";
 
 const itinerarySchema = z.object({
     id: z.string().optional(),
-    subtitle: z.string().min(1, "Subtitle is required"),
+    title: z.string().min(1, "Subtitle is required"),
     activities: z.array(z.string().min(1, "Field cannot be empty")).min(1, "Provide at least one activity"),
-    itineraryImageUrl: z.string().optional(),
+    dayImage: z.string().optional(),
     itineraryImage: z.instanceof(File)
         .optional()
         .refine(file => !file || file.size < 5 * 1024 * 1024, { message: "Max allowed file size is 5MB" })
         .refine(file => !file || ['image/png', 'image/jpeg'].includes(file.type), { message: "Only PNG and JPEG formats allowed" })
-}).refine(data => data.itineraryImage || data.itineraryImageUrl, { message: "An itinerary image is required", path: ['itineraryImage'] });
+}).refine(data => data.itineraryImage || data.dayImage, { message: "An itinerary image is required", path: ['itineraryImage'] });
 
 const tourSchema = z.object({
     title: z.string().min(1, "Title is required"),
     description: z.string().min(1, "Description is required"),
     dates: z.string().min(1, "Date is required"),
     duration: z.string().min(1, "Duration is required"),
-    groupSize: z.string().min(1, "Group size is required").trim().transform(Number).pipe(z.number().positive().max(100, "Group size cannot exceed 100")).transform(String),
-    price: z.string().min(1, "Price is required").trim().transform(Number).pipe(z.number().positive()).transform(String),
+    groupSize: z.number().min(1, "Group size is required").max(100, "Group size cannot exceed 100"),
+    price: z.number().min(1, "Price is required"),
     activities: z.array(z.string().min(1, "Field cannot be empty")).min(1, "At least one activity is required"),
     included: z.array(z.string().min(1, "Field cannot be empty")).min(1, "At least one included item is required"),
     excluded: z.array(z.string().min(1, "Field cannot be empty")).min(1, "At least one excluded item is required"),
@@ -44,26 +44,26 @@ const tourSchema = z.object({
 export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destinations: Destination[] }) {
     const router = useRouter();
     const [title, setTitle] = useState<string>(tour.title);
-    const [description, setDescription] = useState<string>(tour.description);
+    const [description, setDescription] = useState<string>(tour.intro);
     const [dates, setDates] = useState<string>(tour.dates);
     const [duration, setDuration] = useState<string>(tour.duration);
-    const [groupSize, setGroupSize] = useState<string>(tour.groupSize);
-    const [price, setPrice] = useState<string>(tour.price);
+    const [groupSize, setGroupSize] = useState<number>(tour.groupSize);
+    const [price, setPrice] = useState<number>(tour.price);
     const [tourImage, setTourImage] = useState<File | null>();
     const [activities, setActivities] = useState<string[]>(tour.activities);
     const [included, setIncluded] = useState<string[]>(tour.included);
     const [excluded, setExcluded] = useState<string[]>(tour.excluded);
     const [itineraries, setItineraries] = useState<{
         id?: string;
-        subtitle: string;
+        title: string;
         activities: string[];
         itineraryImage?: File | null;
-        itineraryImageUrl?: string;
-    }[]>(tour.itineraries.map(({ id, subtitle, activities, itineraryImageUrl }) => ({
+        dayImage?: string;
+    }[]>(tour.itinerary.map(({ id, title, activities, dayImage }) => ({
         id,
-        subtitle,
+        title,
         activities,
-        itineraryImageUrl,
+        dayImage,
     })));
 
     const [errors, setErrors] = useState<any>({});
@@ -105,16 +105,31 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                 setErrors(z.treeifyError(validationResult.error));
                 setLoading(false);
                 toast.error('A validation error occurred');
+                console.log("validation errors", z.treeifyError(validationResult.error));
                 return;
             }
 
             // 2. Construct data
             const formData = new FormData();
 
+            const itinerariesImages: File[] = [];
+            const itinerariesImageRels: string[] = [];
+
+            const itinerariesData = itineraries.map(({itineraryImage, dayImage, id, ...it}, index) => {
+                itinerariesImages.push(itineraryImage!);
+                const newId = crypto.randomUUID();
+                itinerariesImageRels.push(id || newId);
+                return {
+                    id: id || newId,
+                    day: index + 1,
+                    ...it
+                }
+            });
+
             tourImage && tourImage.size > 0 && formData.append('tourImage', tourImage);
             formData.append('tour', JSON.stringify({
                 title,
-                description,
+                intro: description,
                 dates,
                 duration,
                 groupSize,
@@ -122,38 +137,16 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                 activities,
                 included,
                 excluded,
+                destinationId: tour.destinationId,
+                itineraries: itinerariesData,
             }));
 
-            const updatedItinerariesRels: string[] = [];
-            const updatedItineraries = itineraries.filter(({ itineraryImageUrl }) => itineraryImageUrl !== undefined);
-            updatedItineraries.forEach(({ id, itineraryImage }) => itineraryImage && itineraryImage.size > 0 && updatedItinerariesRels.push(id!));
-            const updatedItinerariesWithImages = updatedItineraries.filter(({ itineraryImage }, index) => {
-                return itineraryImage && itineraryImage.size > 0
-            });
+            formData.append("imageRels", JSON.stringify(itinerariesImageRels))
 
-            const updatedItinerariesImages = updatedItinerariesWithImages.map(({ itineraryImage }) => itineraryImage);
-
-            const updatedItinerariesWithoutImages = updatedItineraries.map(({ itineraryImage, ...updatedItinerary }) => updatedItinerary);
-            updatedItinerariesImages.length > 0 && updatedItinerariesImages.map(image => formData.append('updatedItinerariesImages', image as File))
-            const updated = updatedItinerariesWithoutImages.map(({itineraryImageUrl, ...updatedItinerary}) => ({...updatedItinerary}))
-            
-            updated.length && formData.append('updatedItineraries', JSON.stringify(updated))
-            updatedItinerariesRels.length && formData.append('updatedItinerariesRels', JSON.stringify({ updatedItinerariesRels }));
-
-
-            const newItinerariesImages = itineraries.filter(({ itineraryImageUrl }) => itineraryImageUrl === undefined).map(({ itineraryImage }) => itineraryImage as File);
-            newItinerariesImages.length && newItinerariesImages.map(image => formData.append('newItinerariesImages', image))
-            const newItineraries = itineraries.filter(({ itineraryImageUrl }) => itineraryImageUrl === undefined)
-                .map(({ itineraryImage, itineraryImageUrl, ...itinerary }) => itinerary);;
-            newItineraries.length && formData.append('newItineraries', JSON.stringify(newItineraries));
-
-            for (const [key, value] of formData.entries()) {
-                console.log('key', key);
-                console.log('value', value)
-            }
+            itinerariesImages && itinerariesImages.length && itinerariesImages.forEach(image => formData.append("itineraryImage", image));
 
             // 3. Send the request
-            const res = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations/${tour.destinationId}/tours/${tour.id}`, {
+            const res = await fetch(`/api/tours/${tour.id}`, {
                 method: 'PATCH',
                 body: formData
             })
@@ -222,14 +215,14 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
             </Field>
             <Field className="flex flex-col gap-1">
                 <FieldLabel>Group size</FieldLabel>
-                <Input value={groupSize} onChange={e => setGroupSize(e.target.value)} />
+                <Input type="number" value={groupSize} onChange={e => setGroupSize(parseInt(e.target.value, 10))} />
                 {errors?.properties?.groupSize?.errors?.length &&
                     <ul className="pl-4 list-disc">{errors.properties.groupSize.errors.map((error: string, index: number) =>
                         <li key={index} className="text-red-500 text-sm font-bold">{error}</li>)}</ul>}
             </Field>
             <Field className="flex flex-col gap-1">
                 <FieldLabel>Price</FieldLabel>
-                <Input value={price} onChange={e => setPrice(e.target.value)} />
+                <Input type="number" value={price} onChange={e => setPrice(parseFloat(e.target.value))} />
                 {errors?.properties?.price?.errors?.length &&
                     <ul className="pl-4 list-disc">{errors.properties.price.errors.map((error: string, index: number) =>
                         <li key={index} className="text-red-500 text-sm font-bold">{error}</li>)}</ul>}
@@ -237,7 +230,7 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
             <Field className="flex flex-col gap-1">
                 <FieldLabel>Tour image</FieldLabel>
                 <div className="aspect-video max-w-7xl relative my-2">
-                    <Image src={tour.tourImageUrl} alt={"Tour image"} fill unoptimized className="rounded-2xl" />
+                    <Image src={tour.tourImage} alt={"Tour image"} fill unoptimized className="rounded-2xl" />
                 </div>
                 <Input type="file" onChange={e => setTourImage(e.target.files && e.target.files[0])} />
                 {errors?.properties?.tourImage?.errors?.length &&
@@ -351,25 +344,25 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                         </div>
                         <Field className="flex flex-col gap-2">
                             <FieldLabel>Subtitle</FieldLabel>
-                            <Input value={itinerary.subtitle} onChange={(e) => setItineraries(prev => {
+                            <Input value={itinerary.title} onChange={(e) => setItineraries(prev => {
                                 const copy = [...prev];
-                                copy[itineraryIndex].subtitle = e.target.value;
+                                copy[itineraryIndex].title = e.target.value;
                                 return copy;
                             })} />
                             {errors?.properties?.itineraries?.items?.[itineraryIndex]?.properties?.subtitle?.errors?.length &&
-                                <ul className="pl-4 list-disc">{errors.properties.itineraries.items[itineraryIndex].properties.
-                                    subtitle.errors.map((error: string, index: number) =>
+                                <ul className="pl-4 list-disc">{errors?.properties?.itineraries?.items?.[itineraryIndex]?.properties.
+                                    title?.errors?.map((error: string, index: number) =>
                                         <li key={index} className="text-red-600 font-bold text-sm">{error}</li>)}</ul>
                             }
                         </Field>
 
-                        {itinerary.itineraryImageUrl &&
+                        {itinerary.dayImage &&
                             <div className="relative aspect-video max-w-7xl">
                                 <Image
                                     fill
                                     className="rounded-2xl object-cover object-top"
                                     unoptimized
-                                    src={itinerary.itineraryImageUrl!}
+                                    src={itinerary.dayImage!}
                                     alt={`Day ${itineraryIndex + 1} itinerary image`} />
                             </div>
                         }
@@ -430,7 +423,7 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
         <Button type="button"
             onClick={(e) => {
                 setItineraries(prev => [...prev, {
-                    subtitle: '',
+                    title: '',
                     activities: ['']
                 }])
             }}

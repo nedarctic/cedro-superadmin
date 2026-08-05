@@ -3,7 +3,7 @@ import { Tour } from "./tour";
 export type Itinerary = {
     id: string;
     activities: string[];
-    subtitle: string;
+    title: string;
     day: string;
     imageKey: string;
     dayImage: string;

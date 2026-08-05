@@ -19,7 +19,8 @@ const memberCreationSchema = z.object({
     memberImage: z.instanceof(File, { message: "Member image is required" })
         .refine(file => file.size > 0, { message: "File is required" })
         .refine(file => file.size <= 5 * 1024 * 1024, { message: "File size must be less than 5MB" })
-        .refine(file => ['image/jpeg', 'image/png'].includes(file.type), { message: "File must be a JPEG or PNG image" })
+        .refine(file => ['image/jpeg', 'image/png'].includes(file.type), { message: "File must be a JPEG or PNG image" }),
+    level: z.string().trim().transform((value) => Number(value)).pipe(z.number().positive()),
 })
 
 export function CreateMemberForm() {
@@ -43,7 +44,8 @@ export function CreateMemberForm() {
             name,
             designation,
             description,
-            memberImage
+            memberImage,
+            level,
         };
 
         try {
@@ -60,7 +62,7 @@ export function CreateMemberForm() {
             memberFormData.append('name', name);
             memberFormData.append('designation', designation);
             memberFormData.append('description', description);
-            memberFormData.append('memberImage', memberImage as File);
+            memberFormData.append('image', memberImage as File);
             memberFormData.append('level', level);
 
             for(const [key, value] of memberFormData.entries()){

@@ -18,6 +18,12 @@ import {
 import { Field, FieldLabel } from "./ui/field";
 import { Form } from "./ui/form";
 import { Input } from "./ui/input";
+import z from "zod";
+
+const updateBookingSchema = z.object({
+    name: z.string().trim().min(1, "Name is required"),
+    email: z.email("Invalid email")
+})
 
 export function UpdateBookingDrawer({ booking }: { booking: Booking }) {
     const router = useRouter();
@@ -25,15 +31,31 @@ export function UpdateBookingDrawer({ booking }: { booking: Booking }) {
     const [email, setEmail] = useState<string>(booking.email);
     const [loading, setLoading] = useState<boolean>(false);
     const [open, setOpen] = useState<boolean>(false);
+    const [errors, setErrors] = useState<any>({})
 
     const updateHandler = async (e: SubmitEvent) => {
         e.preventDefault();
         try {
             setLoading(true);
-            const url = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations/${booking.tour.destinationId}/tours/${booking.tourId}/bookings/${booking.id}`;
+
+            const validationRes = updateBookingSchema.safeParse({
+                name,
+                email
+            });
+
+            if(!validationRes.success){
+                setLoading(false);
+                setErrors(z.treeifyError(validationRes.error));
+                return;
+            }
+
+            const url = `/api/bookings/${booking.id}`;
 
             const res = await fetch(url, {
                 method: 'PATCH',
+                headers: {
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({ name, email })
             });
 
@@ -80,10 +102,14 @@ export function UpdateBookingDrawer({ booking }: { booking: Booking }) {
                             <Field>
                                 <FieldLabel>Name</FieldLabel>
                                 <Input type="text" value={name} onChange={e => setName(e.target.value)} />
+                                {errors?.properties?.name?.errors?.length && <ul className="pl-4 list-disc">{errors.properties.name.errors.map((error: string, index: number) => 
+                                <li key={index} className="font-bold text-xs text-red-600">{error}</li>)}</ul>}
                             </Field>
                             <Field>
                                 <FieldLabel>Email</FieldLabel>
                                 <Input type="email" value={email} onChange={e => setEmail(e.target.value)} />
+                                {errors?.properties?.email?.errors?.length && <ul className="pl-4 list-disc">{errors.properties.email.errors.map((error: string, index: number) => 
+                                <li key={index} className="font-bold text-xs text-red-600">{error}</li>)}</ul>}
                             </Field>
                         </div>
                         <div className="flex flex-row justify-end gap-4">

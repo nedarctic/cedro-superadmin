@@ -24,7 +24,7 @@ export function DeleteTourBtn({ tourId, destinationId }: { tourId: string, desti
     const deleteHandler = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations/${destinationId}/tours/${tourId}`, {
+            const res = await fetch(`/api/tours/${tourId}`, {
                 method: 'DELETE',
             });
             const { success } = await res.json()

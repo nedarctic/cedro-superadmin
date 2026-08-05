@@ -3,8 +3,8 @@ export type TeamMember = {
     name: string;
     designation: string;
     description: string;
-    memberImageKey: string;
-    memberImageUrl: string;
+    imageKey: string;
+    memberImage: string;
     level: string;
     createdAt: string;
     updatedAt: string;

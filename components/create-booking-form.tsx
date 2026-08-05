@@ -22,6 +22,7 @@ const createBookingSchema = z.object({
 });
 
 export function CreateBookingForm({ destinations, tours }: { destinations: Destination[], tours: Tour[] }) {
+
     const router = useRouter();
 
     const [name, setName] = useState<string>('');
@@ -40,6 +41,7 @@ export function CreateBookingForm({ destinations, tours }: { destinations: Desti
         e.preventDefault();
         try {
             setLoading(true);
+            console.log("tourId", tourId, "destinationId", destinationId);
 
             const parsedData = createBookingSchema.safeParse({ name, email, destinationId, tourId });
 
@@ -52,9 +54,15 @@ export function CreateBookingForm({ destinations, tours }: { destinations: Desti
                 setErrors({});
             }
 
-            const res = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations/${destinationId}/tours/${tourId}/bookings`, {
+            
+
+            const res = await fetch(`/api/bookings`, {
                 method: 'POST',
-                body: JSON.stringify({ name, email })
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ name, email, tourId }),
+
             });
 
             const { data, success, error } = await res.json();

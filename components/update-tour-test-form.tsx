@@ -118,7 +118,7 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
             const itinerariesData = itineraries.map(({itineraryImage, dayImage, id, ...it}, index) => {
                 itinerariesImages.push(itineraryImage!);
                 const newId = crypto.randomUUID();
-                itinerariesImageRels.push(id || newId);
+                itineraryImage && itineraryImage.size > 0 && itinerariesImageRels.push(id || newId);
                 return {
                     id: id || newId,
                     day: index + 1,

@@ -54,28 +54,30 @@ export async function getBookings(accessToken: string, options: {
 }
 
 // get booking
-export async function getBooking (bookingId: string): Promise<{
+export async function getBooking (bookingId: string, accessToken: string, url: string): Promise<{
     data?: Booking;
     success: boolean;
     error?: string;
 }> {
     try {
-        const res = await fetch(`${process.env.NEST_API_URL}/bookings/${bookingId}`, {
-            method: 'GET'
+        const res = await fetch(url, {
+            method: 'GET',
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
         });
 
+        const data = await res.json();
+
         if (!res.ok) {
-            const error = (await res.json()).error.message;
             return {
                 success: false,
-                error: error || 'Backend request error'
+                error: data
             }
         }
-
-        const { success, data } = await res.json();
         
         return {
-            success,
+            success: true,
             data
         }
     } catch (error) {

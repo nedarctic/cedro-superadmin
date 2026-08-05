@@ -34,7 +34,7 @@ export default async function TourDetailsPage({ params }: { params: Promise<{ to
                         <Image className="rounded-2xl object-cover object-center" unoptimized fill src={data?.tourImage!} alt="Tour image" />
                     </div>
                     <div className="flex-1 space-y-2">
-                        <p className="font-normal text-md">{data?.description}</p>
+                        <p className="font-normal text-md">{data?.intro}</p>
                         <p><span className="font-bold text-md">Price: </span>{new Intl.NumberFormat("en-US", { currency: "USD", style: "currency" }).format(data?.price!)}</p>
                         <p><span className="font-bold text-md">Dates: </span>{data?.dates}</p>
                         <p><span className="font-bold text-md">Destination: </span>{data?.destination.name}</p>
@@ -62,7 +62,7 @@ export default async function TourDetailsPage({ params }: { params: Promise<{ to
                     <h2 className="font-bold text-lg my-2">Itineraries</h2>
                     <ul className="flex flex-col gap-4">{data?.itinerary.map((itinerary, itineraryIndex) => <li key={itineraryIndex} className="rounded-2xl border-2 p-4 flex flex-col gap-3">
                         <p className="bg-green-600 max-w-fit *:text-black rounded-lg py-1 px-2">{itinerary.day}</p>
-                        <p className="font-bold">{itinerary.subtitle}</p>
+                        <p className="font-bold">{itinerary.title}</p>
                         <p className="font-semibold">Activities:</p>
                         <ul className="list-disc pl-4">
                             {itinerary.activities.map((activity, index) => <li key={index}>{activity}</li>)}

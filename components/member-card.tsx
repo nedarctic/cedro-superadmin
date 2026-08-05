@@ -14,7 +14,7 @@ export function MemberCard({ member }: { member: TeamMember }) {
         <CardHeader>
             <div className="aspect-square w-full relative">
                 <Image
-                    src={member.memberImageUrl}
+                    src={member.memberImage}
                     unoptimized
                     fill
                     className="rounded-lg object-cover object-top"

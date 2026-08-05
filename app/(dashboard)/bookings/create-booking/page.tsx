@@ -6,6 +6,7 @@ import { getTours } from "@/lib/helpers/tours.helpers";
 
 export default async function CreateBookingPage() {
 
+    const url = `${process.env.NEST_API_URL}/destinations/all`;
     const {
         success: toursSuccess,
         data: toursData,
@@ -15,7 +16,9 @@ export default async function CreateBookingPage() {
         success: destinationsSuccess,
         data: destinationsData,
         error: destinationsError
-    } = await getDestinations();
+    } = await getDestinations(url);
+
+    const destinations = Array.isArray(destinationsData) ? destinationsData : destinationsData?.destinations;
 
     !toursSuccess && console.log('Failed to fetch tours', toursError);
     !destinationsSuccess && console.log('Failed to fetch destinations', destinationsError)
@@ -29,7 +32,7 @@ export default async function CreateBookingPage() {
             <BreadCrumb crumbs={crumbs} currentPage="Create Booking" />
 
             <h1 className="font-bold text-xl">Booking Creation Form</h1>
-            <CreateBookingForm destinations={destinationsData?.destinations!} tours={toursData?.tours!} />
+            <CreateBookingForm destinations={destinations!} tours={toursData?.tours!} />
         </div>
     );
 }

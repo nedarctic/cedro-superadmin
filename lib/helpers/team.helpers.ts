@@ -30,8 +30,6 @@ export async function getTeam (options: {
             method: 'GET'
         });
 
-        console.log('response', res)
-
         if (!res.ok) {
             const error = (await res.json()).message;
             console.log('error fetching team members', error)

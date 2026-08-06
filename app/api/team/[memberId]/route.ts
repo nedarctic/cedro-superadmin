@@ -11,29 +11,43 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ me
         const { accessToken } = session;
         const { memberId } = await params;
 
-        const formData = await req.formData();
+        const url = `${process.env.NEST_API_URL}/team/${memberId}`;
+        const contentType = req.headers.get("Content-Type") ?? "";
+        
+        let res;
 
-        for(const [key, value] of formData.entries()){
-            console.log(key, value)
+        if(contentType.includes("multipart/form-data")){
+            const formData = await req.formData();
+            res = await fetch(url, {
+                method: "PATCH",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`
+                },
+                body: formData
+            })
+        } else {
+            const body = await req.json();
+            res = await fetch(url, {
+                method: "PATCH",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(body)
+            })
         }
 
-        const res = await fetch(`${process.env.NEST_API_URL}/team/${memberId}`, {
-            method: 'PATCH',
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: formData
-        })
+        const data = await res.json();
 
-        if (!res.ok) {
-            const error = (await res.json()).error.message;
-            return NextResponse.json({ success: false, error: error || 'Backend request error' })
+        if(!res.ok){
+            return NextResponse.json({
+                success: false,
+                error: data
+            })
         }
-
-        const { data, success } = await res.json();
 
         return NextResponse.json({
-            success,
+            success: true,
             data
         })
     } catch (error) {

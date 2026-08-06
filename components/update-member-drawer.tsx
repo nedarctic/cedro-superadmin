@@ -37,14 +37,7 @@ const updateMemberSchema = z.object({
         .optional()
         .refine(file => !file || file.size < 5 * 1024 * 1024, { message: "Maximum allowed image size is 5MB" })
         .refine(file => !file || ['image/png', 'image/jpeg'].includes(file.type), { message: "Only PNG and JPEG images allowed" }),
-    level: z.string()
-        .min(1, "Level cannot be empty")
-        .trim()
-        .transform(value => Number(value))
-        .pipe(z.number()
-            .positive("The level should be a positive number")
-            .max(10, "Level cannot be more than 10")
-        )
+    level: z.number().positive().max(10, "Maximum level allowed is 10"),
 })
 
 export function UpdateMemberDrawer({ teamMember }: { teamMember: TeamMember }) {
@@ -55,7 +48,7 @@ export function UpdateMemberDrawer({ teamMember }: { teamMember: TeamMember }) {
     const [designation, setDesignation] = useState<string>(teamMember?.designation);
     const [description, setDescription] = useState<string>(teamMember?.description);
     const [memberImage, setMemberImage] = useState<File | null>();
-    const [level, setLevel] = useState<string>(teamMember?.level || '');
+    const [level, setLevel] = useState<string>(teamMember?.level);
 
     const [loading, setLoading] = useState<boolean>(false);
     const [open, setOpen] = useState<boolean>(false);
@@ -79,7 +72,9 @@ export function UpdateMemberDrawer({ teamMember }: { teamMember: TeamMember }) {
                 setErrors(z.treeifyError(validationResult.error));
                 setLoading(false);
                 setOpen(false);
-                toast.error("Update member failed");
+                toast.error("Form validation failed");
+                console.log("validation errors", z.treeifyError(validationResult.error));
+                console.log("typeof level", typeof level);
                 return;
             }
 
@@ -87,13 +82,27 @@ export function UpdateMemberDrawer({ teamMember }: { teamMember: TeamMember }) {
             formData.append('name', name);
             formData.append('designation', designation);
             formData.append('description', description);
-            memberImage && memberImage.size > 0 && formData.append('memberImage', memberImage!);
-            formData.append('level', level);
+            memberImage && formData.append('image', memberImage);
+            formData.append('level', level.toString());
 
-            const res = await fetch(`${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/team/${teamMember.id}`, {
-                method: 'PATCH',
-                body: formData
+            const hasImage = !!memberImage;
+
+            const res = await fetch(`/api/team/${teamMember.id}`, {
+                method: "PATCH",
+                headers: hasImage
+                    ? undefined
+                    : { "Content-Type": "application/json" },
+                body: hasImage
+                    ? formData
+                    : JSON.stringify({
+                        name,
+                        designation,
+                        description,
+                        level,
+                    }),
             });
+
+            console.log("member update res", res)
 
             const { success, data, error } = await res.json();
 
@@ -107,6 +116,7 @@ export function UpdateMemberDrawer({ teamMember }: { teamMember: TeamMember }) {
 
             setLoading(false);
             setOpen(false);
+            setErrors({});
             toast.success("Member updated successfully!")
             router.refresh();
 
@@ -156,7 +166,7 @@ export function UpdateMemberDrawer({ teamMember }: { teamMember: TeamMember }) {
                                 </Field>
                                 <div className="relative aspect-square w-full">
                                     <Image
-                                        src={teamMember.memberImageUrl}
+                                        src={teamMember.memberImage}
                                         unoptimized
                                         fill
                                         className="rounded-lg object-cover object-top"
@@ -174,7 +184,7 @@ export function UpdateMemberDrawer({ teamMember }: { teamMember: TeamMember }) {
                                 </Field>
                                 <Field>
                                     <FieldLabel>Level</FieldLabel>
-                                    <Input type="text" value={level} onChange={e => setLevel(e.target.value)} />
+                                    <Input type="string" value={level} onChange={e => setLevel(e.target.value)} />
                                     {errors?.properties?.level?.errors?.length && <ul className="pl-4 list-disc">
                                         {errors.properties.level.errors.map((error: string, index: number) => <li key={index}
                                             className="text-sm font-bold text-red-600">{error}</li>)}

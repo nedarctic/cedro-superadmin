@@ -7,10 +7,8 @@ import { Button } from "./ui/button";
 import { Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 
-export function DeleteBookingBtn({ bookingId, destinationId, tourId }: {
+export function DeleteBookingBtn({ bookingId }: {
     bookingId: string;
-    destinationId: string;
-    tourId: string;
 }) {
     const router = useRouter();
     const [loading, setLoading] = useState<boolean>(false);
@@ -20,7 +18,7 @@ export function DeleteBookingBtn({ bookingId, destinationId, tourId }: {
 
         try {
             setLoading(true);
-            const url = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/destinations/${destinationId}/tours/${tourId}/bookings/${bookingId}`;
+            const url = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/bookings/${bookingId}`;
             const res = await fetch(url, {
                 method: 'DELETE'
             });

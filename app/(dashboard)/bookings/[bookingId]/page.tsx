@@ -39,8 +39,6 @@ export default async function BookingDetailsPage({ params }: { params: Promise<{
                     <UpdateBookingDrawer booking={data!} />
                     <DeleteBookingBtn
                         bookingId={bookingId}
-                        destinationId={data?.tour?.destinationId!}
-                        tourId={data?.tourId!}
                     />
                 </div>
             </div>

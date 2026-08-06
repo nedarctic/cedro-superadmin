@@ -29,7 +29,6 @@ export default async function BookingsPage(
     const { limit = "10", page, search } = await searchParams;
     const { success, data, error } = await getBookings(accessToken, { page, limit, search });
 
-    console.log('Bookings data:', data);
     const { bookings, meta } = data;
 
     error && console.log('An error occurred fetching bookings', error);

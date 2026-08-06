@@ -36,7 +36,6 @@ export async function getBookings(accessToken: string, options: {
         }
 
         const data = await res.json();
-        console.log('Bookings data at helper:', data);
 
         return {
             success: true,

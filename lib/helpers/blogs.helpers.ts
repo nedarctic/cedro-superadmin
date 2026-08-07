@@ -73,10 +73,10 @@ export async function getBlog(blogId: string): Promise<{
             }
         }
 
-        const { success, data } = await res.json();
-        
+        const data = await res.json();
+
         return {
-            success,
+            success: true,
             data
         }
     } catch (error) {

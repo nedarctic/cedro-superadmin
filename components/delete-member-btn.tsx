@@ -27,7 +27,7 @@ export function DeleteMemberBtn({ memberId }: { memberId: string }) {
 
         try {
             setLoading(true);
-            const url = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/team/${memberId}`;
+            const url = `/api/team/${memberId}`;
             const res = await fetch(url, {
                 method: "DELETE"
             });

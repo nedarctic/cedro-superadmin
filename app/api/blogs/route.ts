@@ -22,20 +22,18 @@ export async function POST(req: NextRequest) {
             body: formData
         });
 
-        const { data, success, error } = await res.json();
+        const data = await res.json();
 
         if (!res.ok) {
-            const errorMessage = error;
-            console.log('error creating blog:', errorMessage);
             return NextResponse.json({
                 success: false,
-                error: errorMessage || 'An error occurred while creating the blog'
+                error: data || 'An error occurred while creating the blog'
             })
         }
 
         return NextResponse.json({
             data,
-            success
+            success: true
         })
 
     } catch (error) {

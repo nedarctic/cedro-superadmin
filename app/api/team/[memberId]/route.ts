@@ -67,8 +67,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ m
         const { accessToken } = session;
         const { memberId } = await params;
 
-        console.log('member id', memberId)
-
         const res = await fetch(`${process.env.NEST_API_URL}/team/${memberId}`, {
             method: 'DELETE',
             headers: {
@@ -76,20 +74,17 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ m
             }
         });
 
-        const { data, success, error } = await res.json();
+        const data = await res.json();
 
         if (!res.ok) {
-            console.log('success deleting member', success)
             return NextResponse.json({
                 success: false,
-                error: error || 'backend request error'
+                error: data || 'backend request error'
             });
-        }
-
-        
+        }        
 
         return NextResponse.json({
-            success,
+            success: true,
             data
         })
     } catch (error) {

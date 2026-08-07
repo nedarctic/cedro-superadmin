@@ -29,26 +29,23 @@ export default async function BlogDetailsPage({ params }: { params: Promise<{ bl
                 <h1 className="font-bold text-xl">{data?.title}</h1>
 
                 <div className="relative aspect-video w-full max-w-7xl">
-                    <Image src={data?.blogImageUrl!} alt={"Blog image"} fill unoptimized className="rounded-2xl" />
+                    <Image src={data?.blogImage!} alt={"Blog image"} fill unoptimized className="rounded-2xl" />
                 </div>
 
                 <div className="flex flex-col gap-4 w-full">
 
                     <div className="flex flex-col gap-2">
                         <h2 className="text-lg font-extrabold">Introduction</h2>
-                        <p className="text-sm">{data?.intro}</p>
+                        <p className="text-sm">{data?.story.intro}</p>
                     </div>
 
                     <div className="flex flex-col gap-2 w-full">
                         <ul className="flex flex-col list-none gap-10">
-                            {data?.sections?.map
+                            {data?.story.sections?.map
                                 ((section, index) =>
                                     <li key={index} className="flex flex-col gap-2">
                                         <p className="font-semibold text-md underline">{section.subtitle}</p>
                                         <p className="text-sm">{section.content}</p>
-                                        {section.sectionImageUrl && <div className="relative aspect-video w-full max-w-7xl">
-                                            <Image src={section.sectionImageUrl} alt={`Blog ${section.section} image`} fill className="rounded-xl" unoptimized />
-                                        </div>}
                                     </li>
                                 )
                             }
@@ -57,7 +54,7 @@ export default async function BlogDetailsPage({ params }: { params: Promise<{ bl
 
                     <div className="flex flex-col gap-2">
                         <h2 className="text-lg font-extrabold">Conclusion</h2>
-                        <p className="text-sm">{data?.conclusion}</p>
+                        <p className="text-sm">{data?.story.conclusion}</p>
                     </div>
                 </div>
 

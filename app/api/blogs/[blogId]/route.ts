@@ -21,16 +21,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ bl
             body: formData
         });
 
+        const data = await res.json();
+
         if (!res.ok) {
-            const error = (await res.json()).error.message;
             return NextResponse.json({
                 success: false,
-                error: error || 'Backend request error'
+                error: data || 'Backend request error'
             })
         }
 
-        const { data, success } = await res.json()
-        return NextResponse.json({ success, data })
+        return NextResponse.json({ success: true, data })
 
     } catch (error) {
         return NextResponse.json({
@@ -56,20 +56,20 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ b
             }
         })
 
+        const data = await res.json();
+
         if (!res.ok) {
-            const errorMessage = await res.json();
             return NextResponse.json({
                 success: false,
-                error: errorMessage.error.message
+                error: data || 'Backend request error'
             })
         }
 
-        const { data, success } = await res.json();
-
         return NextResponse.json({
-            success,
+            success: true,
             data
-        })
+        });
+
     } catch (error) {
         return NextResponse.json({
             success: false,

@@ -1,295 +1,224 @@
-'use client';
+'use client'
 
-import { useState, SubmitEvent } from "react";
+import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Blog } from "@/lib/types/blog";
-import { Section } from "@/lib/types/section";
+import { SubmitEvent, useState } from "react";
+import { toast } from "sonner";
+import z from "zod";
+import { CustomSpinner } from "./custom-spinner";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent } from "./ui/dialog";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "./ui/field";
 import { Form } from "./ui/form";
-import { Field, FieldLabel } from "./ui/field";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
-import Image from "next/image";
-import { Button } from "./ui/button";
-import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import z from "zod";
-import { toast } from "sonner";
-import { Dialog, DialogContent } from "./ui/dialog";
-import { CustomSpinner } from "./custom-spinner";
+import { Blog } from "@/lib/types/blog";
+import { StorySection } from "@/lib/types/story-section";
 
-type BlogSections = (Partial<Section> & { sectionImage?: File | null })[];
+const initialBlogData = {
+    id: crypto.randomUUID(),
+    subtitle: "",
+    content: "",
+}
 
-const sectionsSchema = z.object({
-    subtitle: z.string().min(1, "Subtitle is required"),
-    content: z.string().min(1, "Content is required"),
-    sectionImage: z.instanceof(File)
-        .nullable()
-        .optional()
-        .refine(file => !file || file.size < 5 * 1024 * 1024, { message: "Maximum allowed image size is 5MB" })
-        .refine(file => !file || ['image/png', 'image/jpeg', 'image/gif'].includes(file.type), { message: "Allowed image types are PNG, JPEG and GIF only" })
-})
+const storySectionSchema = z.object({
+    subtitle: z.string().optional(),
+    content: z.string().optional(),
+});
 
-const blogSchema = z.object({
-    title: z.string().min(1, "Title is required"),
-    intro: z.string().min(1, "Introduction is required"),
-    conclusion: z.string().min(1, "Conclusion is required"),
+const BlogUpdateSchema = z.object({
+    title: z.string().optional(),
+    intro: z.string().optional(),
+    excerpt: z.string().optional(),
+    conclusion: z.string().optional(),
     blogImage: z.instanceof(File)
-        .optional()
-        .refine(file => !file || file.size < 5 * 1024 * 1024, { message: "Maximum allowed file size is 5MB" })
-        .refine(file => !file || ['image/png', 'image/jpeg', 'image/gif'].includes(file.type), { message: "Allowed image types are PNG, JPEG and GIF only." }),
-    sections: z.array(sectionsSchema).min(1, "At least one section is required"),
-})
+    .nullable()
+    .optional()
+        .refine(file => !file || file.size > 0, { message: "Blog image is required" })
+        .refine(file => !file || ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG, PNG, and GIF images are allowed" })
+        .refine(file => !file || file.size < 5 * 1024 * 1024, { message: "Maximum allowed file size is 5MB" }),
+    storySections: z.array(storySectionSchema).min(1, "At least one story section is required")
+});
 
-export function UpdateBlogForm({ blog }: { blog: Blog }) {
+export function UpdateBlogForm({blog}: {blog: Blog}) {
+
     const router = useRouter();
 
     const [title, setTitle] = useState<string>(blog.title);
-    const [intro, setIntro] = useState<string>(blog.intro);
-    const [conclusion, setConclusion] = useState<string>(blog.conclusion);
-    const [blogImage, setBlogImage] = useState<File | null>();
+    const [excerpt, setExcerpt] = useState<string>(blog.excerpt);
+    const [intro, setIntro] = useState<string>(blog.story.intro);
+    const [conclusion, setConclusion] = useState<string>(blog.story.conclusion);
+    const [blogImage, setBlogImage] = useState<File | null>(null);
+    const [storySections, setStorySections] = useState<Partial<StorySection>[]>(blog.story.sections);
 
-    const blogSections: BlogSections = blog.sections.map(section => ({ ...section, sectionImage: null }));
-    const [sections, setSections] = useState<BlogSections>(blogSections);
-
+    const [errors, setErrors] = useState<any>({});
     const [loading, setLoading] = useState<boolean>(false);
-    const [errors, setErrors] = useState<any>({})
 
-    const updateHandler = async (e: SubmitEvent<HTMLFormElement>) => {
+    const addStorySection = () => {
+        return setStorySections(prev => [...prev, initialBlogData])
+    };
+
+    const handleBlogSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         try {
             setLoading(true);
-
-            const validationResult = blogSchema.safeParse({
+            const validationResult = BlogUpdateSchema.safeParse({
                 title,
                 intro,
+                excerpt,
                 conclusion,
                 blogImage,
-                sections
+                storySections
             });
 
-            if (validationResult.error) {
+            if (!validationResult.success) {
                 setErrors(z.treeifyError(validationResult.error));
                 setLoading(false);
-                console.log(validationResult.error);
-                toast.error("Form validation errors");
-                return;
-            };
-
-
-            const formData = new FormData();
-            const sectionsWithImages: string[] = [];
-
-            const sectionsData = sections.map(({
-                id,
-                section,
-                content,
-                subtitle,
-                sectionImageUrl,
-                sectionImageKey,
-                sectionImage
-            }, index) => {
-
-                if (sectionImage && sectionImage.size > 0) {
-                    formData.append('sectionImages', sectionImage);
-                    sectionsWithImages.push(id!);
-                }
-
-                return {
-                    id,
-                    section: `Section ${index + 1}`,
-                    subtitle,
-                    content,
-                    sectionImageUrl,
-                    sectionImageKey
-                }
-            });
-
-            const blogData = {
-                title,
-                intro,
-                conclusion,
-                sections: sectionsData
-            };
-
-            formData.append('blog', JSON.stringify({ blogData }));
-
-            console.log('blog data', blogData);
-
-            blogImage && blogImage.size > 0 && formData.append('blogImage', blogImage);
-
-            sectionsWithImages && formData.append('sectionsWithImages', JSON.stringify({ sectionsWithImages }));
-
-            console.log("SECTIONS", sections)
-            const url = `${process.env.NEXT_PUBLIC_FRONTEND_URL}/api/blogs/${blog.id}`
-            
-            const res = await fetch(url, {
-                method: "PATCH",
-                body: formData,
-            });
-
-            const { success, data, error } = await res.json();
-
-            if (!res.ok) {
-                setLoading(false);
-                toast.error("Failed to update blog");
+                console.log("validation errors", z.treeifyError(validationResult.error));
                 return;
             }
 
+            // blog data
+            const formData = new FormData();
+
+            formData.append('blog',
+                JSON.stringify({
+                    title,
+                    intro,
+                    excerpt,
+                    conclusion,
+                    sections: storySections.map((section, index) => ({
+                        id: section.id,
+                        sectionNumber: index + 1,
+                        subtitle: section.subtitle,
+                        content: section.content
+                    }))
+                })
+            );
+
+            // blog image
+            blogImage && blogImage.size > 0 && formData.append('image', blogImage as File);
+
+            const res = await fetch(`/api/blogs/${blog.id}`, {
+                method: 'PATCH',
+                ...(blogImage && blogImage.size > 0 ? {} : {
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }),
+                body: blogImage && blogImage.size > 0 ? formData : JSON.stringify({
+                    title,
+                    intro,
+                    excerpt,
+                    conclusion,
+                    sections: storySections.map((section, index) => ({
+                        id: section.id,
+                        sectionNumber: index + 1,
+                        subtitle: section.subtitle,
+                        content: section.content
+                    }))
+                })
+            });
+
+            const { data, success } = await res.json();
+
+            if (!res.ok || !success) {
+                toast.error('An unknown error occurred while updating the blog');
+                setLoading(false);
+                return;
+            }
+
+            toast.success('Blog updated successfully!', {
+                description: 'Blog has been updated successfully.',
+                duration: 4000,
+                action: {
+                    label: 'View Blog',
+                    onClick: () => router.push(`/blogs/${data.id}`)
+                }
+            });
+
             setLoading(false);
-            toast.success("Blog successfully edited");
-            router.push(`/blogs/${blog.id}`);
+            router.push('/blogs');
 
         } catch (error) {
             setLoading(false);
-            toast.error("Service temporarily unavailable")
+            toast.error("Service temporarily unavailable. Please try again later.")
         }
     }
 
     return (
-        <Form className="flex flex-col gap-4" onSubmit={updateHandler}>
+        <Form onSubmit={handleBlogSubmit} className="flex flex-col gap-4 w-full mx-auto">
             <Field>
-                <FieldLabel>Title</FieldLabel>
-                <Input value={title} onChange={e => setTitle(e.target.value)} />
-                {errors?.properties?.title?.errors?.length && <ul className="list-disc pl-4">
-                    {errors.properties.title.errors.map((error: string, index: string) =>
-                        <li key={index} className="text-red-600 text-sm font-bold">{error}</li>
-                    )}
-                </ul>}
+                <FieldLabel htmlFor="title">Blog Title</FieldLabel>
+                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+                {errors.properties?.title?.errors?.length && <ul className="list-disc pl-4">{errors.properties.title.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
             </Field>
             <Field>
-                <FieldLabel>Introduction</FieldLabel>
-                <Textarea value={intro} onChange={e => setIntro(e.target.value)} />
-                {errors?.properties?.intro?.errors?.length && <ul className="list-disc pl-4">
-                    {errors.properties.intro.errors.map((error: string, index: string) =>
-                        <li key={index} className="text-red-600 text-sm font-bold">{error}</li>
-                    )}
-                </ul>}
+                <FieldLabel htmlFor="excerpt">Except</FieldLabel>
+                <Textarea id="excerpt" value={excerpt} onChange={(e) => setExcerpt(e.target.value)} required />
+                {errors.properties?.excerpt?.errors?.length && <ul className="list-disc pl-4">{errors.properties.excerpt.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
             </Field>
-            <div className="flex flex-col gap-2">
-                <h2 className="font-extrabold text-md">Blog image</h2>
-                <div className="relative aspect-video w-full max-w-7xl">
-
-                    <Image src={blog.blogImageUrl} alt={"Blog image"} fill unoptimized className="rounded-2xl" />
-                </div>
-            </div>
             <Field>
-                <FieldLabel>Blog image</FieldLabel>
-                <Input type="file" accept="image/png, image/jpeg, image/gif"
-                    onChange={e => setBlogImage(e.currentTarget.files && e.currentTarget.files[0])}
-                />
-                {errors?.properties?.title?.errors?.length && <ul className="list-disc pl-4">
-                    {errors.properties.titleblogImage.errors.map((error: string, index: string) =>
-                        <li key={index} className="text-red-600 text-sm font-bold">{error}</li>
-                    )}
-                </ul>}
+                <FieldLabel htmlFor="intro">Introduction</FieldLabel>
+                <Textarea id="intro" value={intro} onChange={(e) => setIntro(e.target.value)} required />
+                {errors.properties?.intro?.errors?.length && <ul className="list-disc pl-4">{errors.properties.intro.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
+            </Field>
+            <Field>
+                <FieldLabel htmlFor="blogImage">Blog Image</FieldLabel>
+                <Input accept="image/png, image/gif, image/jpeg" type="file" id="blogImage" onChange={(e) => setBlogImage(e.target.files ? e.target.files[0] : null)} required />
+                {errors.properties?.blogImage?.errors?.length && <ul className="list-disc pl-4">{errors.properties.blogImage.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
             </Field>
 
-
-            <h2 className="font-extrabold text-md">Sections</h2>
-            <ul className="flex flex-col gap-6">
-                {sections.map((section, index) => {
-                    return <li key={index} className="rounded-2xl border-2 p-6 flex flex-col gap-4">
-                        <div className="flex flex-row gap-4 justify-between w-full">
-                            <h3 className="font-extrabold text-md">{`Section ${index + 1}`}</h3>
-                            <Button
-                                type="button"
-                                className="max-w-fit"
-                                onClick={() => setSections(prev => {
-                                    const copy = [...prev];
-                                    return copy.filter((_, i) => i !== index);
-                                })}
-                                disabled={sections.length === 1}
-                                variant="destructive"><Trash2Icon size={16} />Remove section</Button>
+            <FieldGroup>
+                <FieldDescription className="font-semibold text-lg py-2">Story Sections</FieldDescription>
+                {storySections.map((section, index) => (
+                    <div key={index} className="flex flex-col gap-2">
+                        <div className="flex justify-between">
+                            <p className="font-medium text-md bg-olive-700 px-2 rounded-md items-center flex text-white">Section {index + 1}</p>
+                            <Button disabled={storySections.length === 1} type="button" variant="destructive" onClick={() => {
+                                const newSections = [...storySections];
+                                newSections.splice(index, 1);
+                                setStorySections(newSections);
+                            }}>Remove Section</Button>
                         </div>
                         <Field>
-                            <FieldLabel>Subtitle</FieldLabel>
-                            <Input value={section.subtitle} onChange={e => {
-                                setSections(prev => {
-                                    const copy = [...prev];
-                                    copy[index] = { ...copy[index], subtitle: e.target.value };
-                                    return copy;
-                                })
+                            <FieldLabel htmlFor={`subtitle-${index}`}>Subtitle</FieldLabel>
+                            <Input required id={`subtitle-${index}`} value={section.subtitle} onChange={(e) => {
+                                const newSections = [...storySections];
+                                newSections[index].subtitle = e.target.value;
+                                setStorySections(newSections);
                             }} />
-                            {errors?.properties?.sections?.items?.[index]?.properties?.subtitle?.errors?.length && <ul className="list-disc pl-4">
-                                {errors.properties.sections.items[index].properties.subtitle.errors.map((error: string, index: string) =>
-                                    <li key={index} className="text-red-600 text-sm font-bold">{error}</li>
-                                )}
-                            </ul>}
-                        </Field>
-                        <Field>
-                            <FieldLabel>Content</FieldLabel>
-                            <Input value={section.content} onChange={e => {
-                                setSections(prev => {
-                                    const copy = [...prev];
-                                    copy[index] = { ...copy[index], content: e.target.value };
-                                    return copy;
-                                })
-                            }} />
-
-                            {errors?.properties?.sections?.items?.[index]?.properties?.content?.errors?.length &&
-                                <ul className="list-disc pl-4">
-                                    {errors.properties.sections.items[index].properties.content.errors.map((error: string, index: string) =>
-                                        <li key={index} className="text-red-600 text-sm font-bold">{error}</li>
-                                    )}
-                                </ul>
-                            }
+                            {errors.properties?.storySections?.items?.[index]?.properties?.subtitle?.errors?.length && <ul className="list-disc pl-4">{errors.properties.storySections.items[index].properties.subtitle.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
                         </Field>
 
-                        {section.sectionImageUrl ? <div className="flex flex-col gap-2">
-                            <div className="relative aspect-video w-full max-w-7xl">
-                                <Image src={section.sectionImageUrl!}
-                                    fill
-                                    unoptimized
-                                    className="rounded-2xl"
-                                    alt={"Section image"} />
-                            </div>
-                        </div> : ''}
 
                         <Field>
-                            <FieldLabel>Section image</FieldLabel>
-                            <Input type="file" accept="image/png, image/jpeg, image/gif"
-
-                                onChange={(e) => {
-                                    const file = e.currentTarget?.files?.[0];
-                                    setSections(prev => {
-                                        const copy = [...prev];
-                                        copy[index] = { ...copy[index], sectionImage: file };
-                                        return copy;
-                                    })
-                                }}
-                            />
-                            {errors?.properties?.sections?.items?.[index]?.properties?.sectionImage?.errors?.length &&
-                                <ul className="list-disc pl-4">
-                                    {errors.properties.sections.items[index].properties.sectionImage.errors.map((error: string, index: string) =>
-                                        <li key={index} className="text-red-600 text-sm font-bold">{error}</li>
-                                    )}
-                                </ul>
-                            }
+                            <FieldLabel htmlFor={`content-${index}`}>Content</FieldLabel>
+                            <Textarea required id={`content-${index}`} value={section.content} onChange={(e) => {
+                                const newSections = [...storySections];
+                                newSections[index].content = e.target.value;
+                                setStorySections(newSections);
+                            }} />
+                            {errors.properties?.storySections?.items?.[index]?.properties?.content?.errors?.length && <ul className="list-disc pl-4">{errors.properties.storySections.items[index].properties.content.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
                         </Field>
-                    </li>
-                })}
-            </ul>
 
-            <Button
-                type="button"
-                onClick={() => {
-                    setSections(prev => [...prev, {
-                        id: crypto.randomUUID(),
-                        content: '',
-                        subtitle: '',
-                        sectionImage: null
-                    }])
-                }}><PlusIcon size={16} />Add section</Button>
-
+                    </div>
+                ))}
+                <div className="flex justify-start">
+                    <Button type="button" onClick={() => addStorySection()}>
+                        <PlusIcon size={16} /> Add Section
+                    </Button>
+                </div>
+            </FieldGroup>
             <Field>
-                <FieldLabel>Conclusion</FieldLabel>
-                <Textarea value={conclusion} onChange={e => setConclusion(e.target.value)} />
+                <FieldLabel htmlFor="conclusion">Conclusion</FieldLabel>
+                <Textarea id="conclusion" value={conclusion} onChange={(e) => setConclusion(e.target.value)} required />
+                {errors.properties?.conclusion?.errors?.length && <ul className="list-disc pl-4">{errors.properties.conclusion.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
             </Field>
-
-            <Button
-                disabled={loading}
-                type="submit"><PencilIcon size={16} />{loading ? "Updating..." : "Update blog"}</Button>
-
+            <Button disabled={loading} type="submit">
+                {loading ? 'Updating...' : 'Update Blog'}
+            </Button>
             {loading && (
                 <Dialog open={loading}>
                     <DialogContent
@@ -305,7 +234,5 @@ export function UpdateBlogForm({ blog }: { blog: Blog }) {
                 </Dialog>
             )}
         </Form>
-
     )
-
 }

@@ -1,13 +1,13 @@
-import { Section } from "./section";
+import { Story } from "./story";
 
 export type Blog = {
     id: string;
     title: string;
-    intro: string;
-    conclusion: string;
-    blogImageKey: string;
-    blogImageUrl: string;
-    sections: Section[];
+    date: string;
+    excerpt: string;    
+    blogImage: string;
+    imageKey: string;
+    story: Story;
     createdAt: string;
     updatedAt: string;
 }

@@ -11,15 +11,31 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ bl
         const { accessToken } = session;
         const { blogId } = await params;
 
-        const formData = await req.formData();
+        let res;
 
-        const res = await fetch(`${process.env.NEST_API_URL}/blogs/${blogId}`, {
-            method: 'PATCH',
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: formData
-        });
+        const contentType = req.headers.get("Content-Type");
+        const url = `${process.env.NEST_API_URL}/blogs/${blogId}`;
+
+        if (contentType?.includes("multipart/form-data")) {
+            const formData = await req.formData();
+            res = await fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: formData
+            });
+        } else {
+            const body = await req.json();
+            res = await fetch(url, {
+                method: "PATCH",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({blog: JSON.stringify(body)})
+            });
+        }
 
         const data = await res.json();
 

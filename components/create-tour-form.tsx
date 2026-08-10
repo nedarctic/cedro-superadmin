@@ -4,6 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Dispatch, SetStateAction, SubmitEvent } from "react";
@@ -13,14 +21,6 @@ import z from "zod";
 import { CustomSpinner } from "./custom-spinner";
 import { Dialog, DialogContent } from "./ui/dialog";
 import { Textarea } from "./ui/textarea";
-import {
-  Select,
-  SelectTrigger,
-  SelectGroup,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select"
 
 type Itinerary = {
   activities: string[];
@@ -222,7 +222,7 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
       itineraries.forEach((itinerary, index) => {
         itinerary.itineraryImage && itinerary.itineraryImage.size > 0 && formData.append("itineraryImage", itinerary.itineraryImage!);
       });
-      
+
       formData.append("tour", JSON.stringify({
         title,
         intro: description,
@@ -378,24 +378,27 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
         {errors.properties?.title?.errors?.length && <ul className="list-disc pl-4">{errors.properties.title.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
       </Field>
 
-      <Select
-        value={destinationId}
-        onValueChange={(value) => setDestinationId(value)}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Select a destination" />
-        </SelectTrigger>
+      <Field>
+        <FieldLabel>Destination</FieldLabel>
+        <Select
+          value={destinationId}
+          onValueChange={(value) => setDestinationId(value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select a destination" />
+          </SelectTrigger>
 
-        <SelectContent>
-          <SelectGroup>
-            {items.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+          <SelectContent>
+            <SelectGroup>
+              {items.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </Field>
 
       <Field >
         <FieldLabel>Duration</FieldLabel>

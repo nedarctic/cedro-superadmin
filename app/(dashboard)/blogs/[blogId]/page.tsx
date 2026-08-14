@@ -7,14 +7,24 @@ import Image from "next/image";
 export default async function BlogDetailsPage({ params }: { params: Promise<{ blogId: string }> }) {
 
     const { blogId } = await params;
-    const { success, data, error } = await getBlog(blogId)
-
-    !success && console.log('An error occurred fetching blog', error);
-    success && console.log('Successfully fetched blog data', data);
+    const { success, data, error } = await getBlog(blogId);
 
     const crumbs = [
         { label: 'Blogs', link: '/blogs' },
     ]
+
+    if (!success) {
+        return (
+            <div className="flex flex-col py-6 ml-4 mr-6 gap-6 h-full">
+                <div className="flex justify-between">
+                    <BreadCrumb crumbs={crumbs} currentPage="Blog Details" />
+                </div>
+                <div className="min-h-4/5 flex flex-col items-start justify-start gap-6">
+                    <h1 className="font-bold text-xl">Failed to fetch blog details. Check your connection and try again.</h1>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col py-6 ml-4 mr-6 gap-6 h-full">

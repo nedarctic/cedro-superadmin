@@ -25,7 +25,7 @@ export default async function DestinationsPage({ searchParams }: {
     params.append("limit", limit);
     search && params.append("search", search);
 
-    const url = `${process.env.NEST_API_URL}/destinations?${params.toString()}`;
+    const url = `${process.env.NEST_API_URL}/destinations/super-admin?${params.toString()}`;
 
     const { data, success, error } = await getDestinations(url);
     

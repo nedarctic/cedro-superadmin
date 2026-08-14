@@ -37,7 +37,7 @@ export default async function Page() {
         <div className="flex flex-col gap-3 p-4 flex-1 border-2 rounded-2xl">
           <h2 className="font-bold text-lg">Recent Bookings</h2>
           <ul className="flex flex-col gap-2 list-disc pl-4">{data?.recentBookings.map((booking, index) => <li key={index} 
-          className="text-md" >{booking.tour.title} by {booking.email}</li>)}</ul>
+          className="text-md" >{booking?.tour?.title ? booking.tour.title : "Booking request"} by {booking.email}</li>)}</ul>
         </div>
       </div>
     </div>

@@ -12,7 +12,8 @@ const nextConfig: NextConfig = {
         hostname: "pub-79ed953562964dbfa4ff96ef322c18ac.r2.dev"
       }
     ]
-  }
+  },
+  output: "standalone"
 };
 
 export default nextConfig;

@@ -49,7 +49,7 @@ export default async function DestinationDetailPage({ params }: { params: Promis
         {data?.guide ? <ul className="list-none">
             {data.guide.map((guide, index) => <li key={index}>
                 <h2 className="text-md font-semibold">{guide.subtitle}</h2>
-                <p className="text-md">{guide.subtitle}</p>
+                <p className="text-md">{guide.content}</p>
             </li>)} </ul> :
             <p className="text-md">There is no guide for destination at the moment. Edit the destination to add a guide.</p>}
 

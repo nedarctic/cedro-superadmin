@@ -12,6 +12,7 @@ import { Input } from "./ui/input";
 import Image from "next/image";
 import { PlusIcon, Trash2Icon } from "lucide-react";
 import { Destination } from "@/lib/types/destination";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup } from "./ui/select";
 
 const itinerarySchema = z.object({
     id: z.string().optional(),
@@ -30,6 +31,7 @@ const tourSchema = z.object({
     dates: z.string().min(1, "Date is required"),
     duration: z.string().min(1, "Duration is required"),
     groupSize: z.number().min(1, "Group size is required").max(100, "Group size cannot exceed 100"),
+    tourType: z.enum(["GROUP", "PRIVATE"], "Tour type must be either 'GROUP' or 'PRIVATE'"),
     price: z.number().min(1, "Price is required"),
     activities: z.array(z.string().min(1, "Field cannot be empty")).min(1, "At least one activity is required"),
     included: z.array(z.string().min(1, "Field cannot be empty")).min(1, "At least one included item is required"),
@@ -65,6 +67,7 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
         activities,
         dayImage,
     })));
+    const [tourType, setTourType] = useState<"GROUP" | "PRIVATE">(tour.tourType);
 
     const [errors, setErrors] = useState<any>({});
     const [loading, setLoading] = useState<boolean>(false);
@@ -98,7 +101,8 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                 activities,
                 included,
                 excluded,
-                itineraries
+                itineraries,
+                tourType
             });
 
             if (!validationResult.success) {
@@ -115,7 +119,7 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
             const itinerariesImages: File[] = [];
             const itinerariesImageRels: string[] = [];
 
-            const itinerariesData = itineraries.map(({itineraryImage, dayImage, id, ...it}, index) => {
+            const itinerariesData = itineraries.map(({ itineraryImage, dayImage, id, ...it }, index) => {
                 itinerariesImages.push(itineraryImage!);
                 const newId = crypto.randomUUID();
                 itineraryImage && itineraryImage.size > 0 && itinerariesImageRels.push(id || newId);
@@ -139,6 +143,7 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                 excluded,
                 destinationId: tour.destinationId,
                 itineraries: itinerariesData,
+                tourType
             }));
 
             formData.append("imageRels", JSON.stringify(itinerariesImageRels))
@@ -153,25 +158,25 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
 
             if (!res.ok) {
                 setLoading(false);
-                toast.error('An error occurred', { description: await res.text() });                
+                toast.error('An error occurred', { description: await res.text() });
                 return;
             }
 
             const { data, success, error } = await res.json();
 
-            if (!success) {    
-                setLoading(false);            
+            if (!success) {
+                setLoading(false);
                 toast.error('Update failed');
                 console.log('success', success);
                 console.log('error', error)
-                
+
                 return;
             }
 
             setLoading(false);
             toast.success('Tour successfully updated');
             setErrors({});
-            
+
 
             // 4. Navigate client to tour detail page
             router.push(`/tours/${tour.id}`);
@@ -179,7 +184,7 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
             setLoading(false);
             toast.error('An error occurred', {
                 description: error instanceof Error && error.message || 'Service temporarily unavailable'
-            });            
+            });
         }
     }
 
@@ -213,13 +218,35 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                     <ul className="pl-4 list-disc">{errors.properties.duration.errors.map((error: string, index: number) =>
                         <li key={index} className="text-red-500 text-sm font-bold">{error}</li>)}</ul>}
             </Field>
-            <Field className="flex flex-col gap-1">
-                <FieldLabel>Group size</FieldLabel>
-                <Input type="number" value={groupSize} onChange={e => setGroupSize(parseInt(e.target.value, 10))} />
-                {errors?.properties?.groupSize?.errors?.length &&
-                    <ul className="pl-4 list-disc">{errors.properties.groupSize.errors.map((error: string, index: number) =>
-                        <li key={index} className="text-red-500 text-sm font-bold">{error}</li>)}</ul>}
+            <Field>
+                <FieldLabel>Tour Type</FieldLabel>
+                <Select
+                    value={tourType}
+                    onValueChange={(value: "GROUP" | "PRIVATE") => setTourType(value)}
+                >
+                    <SelectTrigger>
+                        <SelectValue placeholder="Select tour type" />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                        <SelectGroup>
+                            {[{ label: "Private", value: "PRIVATE" }, { label: "Group", value: "GROUP" }].map((item) => (
+                                <SelectItem key={item.value} value={item.value}>
+                                    {item.label}
+                                </SelectItem>
+                            ))}
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
             </Field>
+            {tourType === "GROUP" && (
+                <Field className="flex flex-col gap-1">
+                    <FieldLabel>Group size</FieldLabel>
+                    <Input type="number" value={groupSize} onChange={e => setGroupSize(parseInt(e.target.value, 10))} />
+                    {errors?.properties?.groupSize?.errors?.length &&
+                        <ul className="pl-4 list-disc">{errors.properties.groupSize.errors.map((error: string, index: number) =>
+                            <li key={index} className="text-red-500 text-sm font-bold">{error}</li>)}</ul>}
+                </Field>)}
             <Field className="flex flex-col gap-1">
                 <FieldLabel>Price</FieldLabel>
                 <Input type="number" value={price} onChange={e => setPrice(parseFloat(e.target.value))} />
@@ -335,12 +362,12 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
 
                         <div className="flex flex-row justify-between">
                             <p className="p-2 rounded-lg bg-green-600 text-sm text-black font-bold w-fit">Day {itineraryIndex + 1}</p>
-                            <Button type="button" variant="destructive" 
-                            className="max-w-fit"
-                            onClick={() => {
-                                setItineraries(prev => [...prev].filter((_, i) => i !== itineraryIndex))
-                            }} 
-                            disabled={itineraries.length === 1}><Trash2Icon size={16} />Delete</Button>
+                            <Button type="button" variant="destructive"
+                                className="max-w-fit"
+                                onClick={() => {
+                                    setItineraries(prev => [...prev].filter((_, i) => i !== itineraryIndex))
+                                }}
+                                disabled={itineraries.length === 1}><Trash2Icon size={16} />Delete</Button>
                         </div>
                         <Field className="flex flex-col gap-2">
                             <FieldLabel>Subtitle</FieldLabel>

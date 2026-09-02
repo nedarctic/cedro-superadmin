@@ -59,7 +59,8 @@ const tourCreationSchema = z.object({
     .refine(file => file.size <= 5 * 1024 * 1024, { message: "Image size must be less than 5MB" })
     .refine(file => ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG, PNG, and GIF images are allowed" }),
   itineraries: z.array(itinerarySchema).min(1, "At least one itinerary is required"),
-  duration: z.string().trim().min(1, "Duration cannot be empty")
+  duration: z.string().trim().min(1, "Duration cannot be empty"),
+  tourType: z.enum(["GROUP", "PRIVATE"], "Tour type must be either 'GROUP' or 'PRIVATE'")
 });
 
 export default function CreateTourForm({ items }: { items: { label: string, value: string }[] }) {
@@ -76,11 +77,12 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
   const [title, setTitle] = useState<string>('');
   const [destinationId, setDestinationId] = useState<string>('');
   const [dates, setDates] = useState<string>('');
-  const [groupSize, setGroupSize] = useState<string>('');
+  const [groupSize, setGroupSize] = useState<string>('1');
   const [price, setPrice] = useState<string>('');
   const [tourImage, setTourImage] = useState<File | null>(null);
   const [itineraries, setItineraries] = useState<Itinerary[]>(initialItineraryData(1));
   const [duration, setDuration] = useState<string>('');
+  const [tourType, setTourType] = useState<"GROUP" | "PRIVATE">("GROUP");
 
   const [steps, setSteps] = useState<{
     destination: string;
@@ -205,7 +207,8 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
         price,
         tourImage,
         itineraries,
-        duration
+        duration,
+        tourType
       });
 
       if (!validationResult.success) {
@@ -234,6 +237,7 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
         groupSize: Number(groupSize),
         price: Number(price),
         duration,
+        tourType,
         itineraries: itineraries.map((itinerary, index) => ({
           day: `Day ${index + 1}`,
           title: itinerary.subtitle,
@@ -400,6 +404,28 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
         </Select>
       </Field>
 
+      <Field>
+        <FieldLabel>Tour Type</FieldLabel>
+        <Select
+          value={tourType}
+          onValueChange={(value: "GROUP" | "PRIVATE") => setTourType(value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select tour type" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectGroup>
+              {[{ label: "Private", value: "PRIVATE" }, { label: "Group", value: "GROUP" }].map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </Field>
+
       <Field >
         <FieldLabel>Duration</FieldLabel>
         <Input name="duration" placeholder="Duration" required value={duration}
@@ -414,12 +440,14 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
         {errors.properties?.dates?.errors?.length && <ul className="list-disc pl-4">{errors.properties.dates.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error}</li>))}</ul>}
       </Field>
 
-      <Field>
-        <FieldLabel>Group size</FieldLabel>
-        <Input name="groupSize" placeholder="Group size" required value={groupSize}
-          onChange={e => setGroupSize(e.currentTarget.value)} type="text" />
-        {errors.properties?.groupSize?.errors?.length && <ul className="list-disc pl-4">{errors.properties.groupSize.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error === "Invalid input: expected number, received NaN" ? "Group size must be a valid number" : error}</li>))}</ul>}
-      </Field>
+      {tourType === "GROUP" && (
+        <Field>
+          <FieldLabel>Group size</FieldLabel>
+          <Input name="groupSize" placeholder="Group size" required value={groupSize}
+            onChange={e => setGroupSize(e.currentTarget.value)} type="text" />
+          {errors.properties?.groupSize?.errors?.length && <ul className="list-disc pl-4">{errors.properties.groupSize.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error === "Invalid input: expected number, received NaN" ? "Group size must be a valid number" : error}</li>))}</ul>}
+        </Field>
+      )}
 
       <Field >
         <FieldLabel>Price</FieldLabel>

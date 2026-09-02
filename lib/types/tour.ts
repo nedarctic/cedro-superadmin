@@ -22,4 +22,5 @@ export type Tour = {
     bookings?: Booking[];
     createdAt: string;
     updatedAt: string;
+    tourType: "GROUP" | "PRIVATE";
 }

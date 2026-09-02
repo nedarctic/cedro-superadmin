@@ -27,12 +27,13 @@ export default async function TourDetailsPage({ params }: { params: Promise<{ to
                     <DeleteTourBtn destinationId={data?.destinationId!} tourId={tourId} />
                 </div>
             </div>
-            <div className="min-h-4/5 flex flex-col items-start justify-start">
+            <div className="min-h-4/5 flex flex-col items-start justify-start gap-6">
                 <h1 className="font-extrabold text-xl lg:text-2xl">{data?.title}</h1>
+                <div className="relative aspect-video flex-1 max-w-7xl w-full">
+                    <Image className="rounded-2xl object-cover object-center" unoptimized fill src={data?.tourImage!} alt="Tour image" />
+                </div>
                 <div className="flex lg:flex-row flex-col gap-4 justify-between w-full my-4">
-                    <div className="relative aspect-video flex-1 max-w-4xl">
-                        <Image className="rounded-2xl object-cover object-center" unoptimized fill src={data?.tourImage!} alt="Tour image" />
-                    </div>
+
                     <div className="flex-1 space-y-2">
                         <p className="font-normal text-md">{data?.intro}</p>
                         <p><span className="font-bold text-md">Price: </span>{new Intl.NumberFormat("en-US", { currency: "USD", style: "currency" }).format(data?.price!)}</p>
@@ -44,7 +45,7 @@ export default async function TourDetailsPage({ params }: { params: Promise<{ to
 
                     </div>
                 </div>
-                <hr className="my-4 w-full"/>
+                <hr className="my-4 w-full" />
                 <div className="flex md:flex-row flex-col justify-between w-full mt-4 gap-4">
                     <div>
                         <p className="font-bold text-md">Activities:</p>
@@ -69,9 +70,9 @@ export default async function TourDetailsPage({ params }: { params: Promise<{ to
                         </ul>
                         <div className="relative aspect-video w-full mt-3">
                             <Image src={itinerary.dayImage}
-                            fill
-                            className="rounded-2xl" 
-                            alt={`${itinerary.day} itinerary image`} />
+                                fill
+                                className="rounded-2xl"
+                                alt={`${itinerary.day} itinerary image`} />
                         </div>
                     </li>)}
                     </ul>

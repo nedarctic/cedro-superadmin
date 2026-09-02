@@ -136,7 +136,7 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
                 intro: description,
                 dates,
                 duration,
-                groupSize,
+                ...(tourType === "GROUP" ? { groupSize } : { groupSize: 1 }),
                 price,
                 activities,
                 included,

@@ -1,0 +1,6 @@
+{
+  "name": "superadmin service",
+  "service": "superadmin",
+  "workspaceFolder": "/app",
+  "dockerComposeFile": "../../compose.yaml"
+}

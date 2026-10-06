@@ -1,6 +1,7 @@
 import { Booking } from "./booking";
 import { Destination } from "./destination";
 import { Itinerary } from "./itinerary";
+import { Status } from "../enums/status";
 
 export type Tour = {
     id: string;
@@ -23,4 +24,5 @@ export type Tour = {
     createdAt: string;
     updatedAt: string;
     tourType: "GROUP" | "PRIVATE";
+    postStatus: Status;
 }

@@ -23,6 +23,7 @@ export default async function ToursPage({ searchParams }: {
 
     const headers = [
         { label: "Title", key: "title" },
+        {label: "Status", key: "status"},
         { label: 'Bookings', key: 'totalBookings' }
     ];
 

@@ -256,9 +256,11 @@ export function UpdateTourTestForm({ tour, destinations }: { tour: Tour; destina
             </Field>
             <Field className="flex flex-col gap-1">
                 <FieldLabel>Tour image</FieldLabel>
-                <div className="aspect-video max-w-7xl relative my-2">
-                    <Image src={tour.tourImage} alt={"Tour image"} fill unoptimized className="rounded-2xl" />
-                </div>
+                {tour.tourImage && (
+                    <div className="aspect-video max-w-7xl relative my-2">
+                        <Image src={tour.tourImage} alt={"Tour image"} fill unoptimized className="rounded-2xl" />
+                    </div>
+                )}
                 <Input type="file" onChange={e => setTourImage(e.target.files && e.target.files[0])} />
                 {errors?.properties?.tourImage?.errors?.length &&
                     <ul className="pl-4 list-disc">{errors.properties.tourImage.errors.map((error: string, index: number) =>

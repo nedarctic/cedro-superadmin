@@ -269,6 +269,56 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
     }
   }
 
+  async function saveDraft() {
+    try {
+      const formData = new FormData();
+      formData.append("tourImage", tourImage!);
+      itineraries.forEach((itinerary, index) => {
+        itinerary.itineraryImage && itinerary.itineraryImage.size > 0 && formData.append("itineraryImage", itinerary.itineraryImage!);
+      });
+
+      formData.append("tour", JSON.stringify({
+        title,
+        intro: description,
+        activities,
+        included,
+        excluded,
+        destinationId,
+        dates,
+        groupSize: Number(groupSize),
+        price: Number(price),
+        duration,
+        tourType,
+        itineraries: itineraries.map((itinerary, index) => ({
+          day: `Day ${index + 1}`,
+          title: itinerary.subtitle,
+          activities: itinerary.activities
+        }))
+      }))
+
+      const url = `/api/tours/save-draft`;
+      const response = await fetch(url, {
+        method: "POST",
+        body: formData,
+      });
+
+      const { success, error, data } = await response.json();
+      if (!success) {
+        setLoading(false);
+        toast.error("Failed to create tour.", { description: error || "An unknown error occurred." })
+        return;
+      }
+
+      setLoading(false);
+      toast.success("Tour saved as draft successfully!");
+      router.push(`/tours/${data.id}`);
+    } catch (error) {
+      toast.error("Failed to save tour draft.", { description: "Service temporarily unavailable. Please try again later." })
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <Form
       className="flex w-full max-w-7xl mx-auto flex-col gap-4"
@@ -535,9 +585,14 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
       ))}
       <Button type="button" variant="secondary" onClick={() => addItinerary(itineraries.length + 1)}>Add itinerary</Button>
 
+      <Button variant="outline" disabled={loading} type="button" onClick={saveDraft}>
+        Save Draft
+      </Button>
       <Button disabled={loading} type="submit">
         Submit
       </Button>
+
+
       {loading && (
         <Dialog open={loading}>
           <DialogContent

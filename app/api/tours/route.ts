@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
         }
         const { accessToken } = session;
 
-        const url = `${process.env.NEST_API_URL}/tours`;
+        const url = `${process.env.NEST_API_URL}/tours/create-tour`;
         const formData = await req.formData();
 
         for(const [key, value] of formData.entries()) {

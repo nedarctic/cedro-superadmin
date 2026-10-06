@@ -1,3 +1,4 @@
+import { Status } from "../enums/status";
 import { Story } from "./story";
 
 export type Blog = {
@@ -10,4 +11,5 @@ export type Blog = {
     story: Story;
     createdAt: string;
     updatedAt: string;
+    blogStatus: Status;
 }

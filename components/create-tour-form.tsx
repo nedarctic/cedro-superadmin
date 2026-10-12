@@ -40,9 +40,11 @@ const itinerarySchema = z.object({
   activities: z.array(z.string().trim().min(1, "Activity cannot be empty")).min(1, "At least one activity is required"),
   subtitle: z.string().trim().min(1, "Subtitle cannot be empty"),
   day: z.string().trim().min(1, "Day cannot be empty"),
-  itineraryImage: z.instanceof(File, { message: "Please upload an image file" })
-    .refine(file => file.size <= 5 * 1024 * 1024, { message: "Image size must be less than 5MB" })
-    .refine(file => ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG, PNG, and GIF images are allowed" })
+  itineraryImage: z
+    .instanceof(File)
+    .nullable()
+    .refine(file => !file || file.size <= 5 * 1024 * 1024, { message: "Image size must be less than 5MB" })
+    .refine(file => !file || ['image/jpeg', 'image/png', 'image/gif'].includes(file.type), { message: "Only JPEG, PNG, and GIF images are allowed" })
 });
 
 const tourCreationSchema = z.object({
@@ -189,6 +191,8 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
 
 
   async function submitForm(event: SubmitEvent<HTMLFormElement>) {
+
+    console.log("submit button hit!")
     event.preventDefault();
 
     try {
@@ -500,7 +504,7 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
       )}
 
       <Field >
-        <FieldLabel>Price</FieldLabel>
+        <FieldLabel>Price (From)</FieldLabel>
         <Input name="price" placeholder="Price" required value={price}
           onChange={e => setPrice(e.currentTarget.value)} type="text" />
         {errors.properties?.price?.errors?.length && <ul className="list-disc pl-4">{errors.properties.price.errors.map((error: string, index: number) => (<li className="font-bold text-[12px] text-red-600" key={index}>{error === "Invalid input: expected number, received NaN" ? "Price must be a valid number" : error}</li>))}</ul>}
@@ -570,7 +574,7 @@ export default function CreateTourForm({ items }: { items: { label: string, valu
             <FieldLabel>Add image</FieldLabel>
             <Input
               placeholder="Add itinerary image"
-              required
+
               onChange={(e) => {
                 const file = e.currentTarget.files?.[0]
                 return file && handleItineraryImage(
